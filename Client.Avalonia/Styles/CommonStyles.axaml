@@ -1,0 +1,124 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style Selector="Border.card">
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="BoxShadow" Value="1 1 6 0 DarkGray" />
+        <Setter Property="Margin" Value="2" />
+        <Setter Property="Padding" Value="8 4" />
+    </Style>
+
+    <!--Spacing-->
+
+    <Style Selector=":is(Control).ha-stretch">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
+    <Style Selector=":is(Control).ha-center">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector=":is(Control).ha-left">
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+
+    <Style Selector=":is(Control).ha-right">
+        <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+
+    <Style Selector=":is(Control).va-top">
+        <Setter Property="VerticalAlignment" Value="Top" />
+    </Style>
+
+    <Style Selector=":is(Control).va-center">
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector=":is(Control).va-bottom">
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+    </Style>
+
+    <Style Selector=":is(Control).va-stretch">
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+    </Style>
+
+    <Style Selector=":is(Control).m-0">
+        <Setter Property="Margin" Value="0" />
+    </Style>
+
+
+    <Style Selector=":is(Control).m-1">
+        <Setter Property="Margin" Value="4" />
+    </Style>
+
+    <Style Selector=":is(Control).m-2">
+        <Setter Property="Margin" Value="8" />
+    </Style>
+
+    <Style Selector=":is(Control).m-3">
+        <Setter Property="Margin" Value="16" />
+    </Style>
+
+    <Style Selector=":is(Control).mb-1">
+        <Setter Property="Margin" Value="0 0 0 4" />
+    </Style>
+
+    <Style Selector=":is(Control).mb-2">
+        <Setter Property="Margin" Value="0 0 0 8" />
+    </Style>
+
+    <Style Selector=":is(Control).mt-1">
+        <Setter Property="Margin" Value="0 4 0 0" />
+    </Style>
+
+    <Style Selector=":is(Control).mt-2">
+        <Setter Property="Margin" Value="0 8 0 0" />
+    </Style>
+
+    <Style Selector=":is(Control).mt-3">
+        <Setter Property="Margin" Value="0 16 0 0" />
+    </Style>
+
+    <Style Selector=":is(Control).mx-1">
+        <Setter Property="Margin" Value="4 0" />
+    </Style>
+
+    <Style Selector=":is(Control).mx-2">
+        <Setter Property="Margin" Value="8 0" />
+    </Style>
+
+    <Style Selector=":is(Control).my-1">
+        <Setter Property="Margin" Value="0 4 " />
+    </Style>
+
+    <Style Selector=":is(Control).my-2">
+        <Setter Property="Margin" Value="0 8" />
+    </Style>
+
+    <Style Selector=":is(Control).my-4">
+        <Setter Property="Margin" Value="0 24" />
+    </Style>
+
+    <Style Selector=":is(Control).ml-1">
+        <Setter Property="Margin" Value="4 0 0 0" />
+    </Style>
+
+    <Style Selector=":is(Control).ml-2">
+        <Setter Property="Margin" Value="8 0 0 0" />
+    </Style>
+
+    <Style Selector=":is(Control).mr-1">
+        <Setter Property="Margin" Value="0 0 4 0" />
+    </Style>
+
+    <Style Selector=":is(Control).mr-2">
+        <Setter Property="Margin" Value="0 0 8 0" />
+    </Style>
+
+    <Style Selector=":is(TextBlock).pr-2">
+        <Setter Property="Padding" Value="0 0 8 0" />
+    </Style>
+
+    <Style Selector=":is(Button).hca-center">
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+</Styles>

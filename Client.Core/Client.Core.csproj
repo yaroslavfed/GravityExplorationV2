@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <TargetFrameworks>net9.0;net8.0</TargetFrameworks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Folder Include="Storages\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="ReactiveUI" Version="20.1.63" />
+    </ItemGroup>
+
+</Project>

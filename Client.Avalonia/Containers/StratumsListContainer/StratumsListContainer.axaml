@@ -1,0 +1,47 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:objectsListContainer="clr-namespace:Client.Avalonia.Containers.StratumsListContainer"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Client.Avalonia.Containers.StratumsListContainer.StratumsListContainer"
+             x:DataType="objectsListContainer:StratumsListContainerViewModel">
+    <Grid RowDefinitions="Auto *">
+        <DockPanel Grid.Row="0" Classes="ha-stretch">
+            <TextBlock DockPanel.Dock="Left"
+                       Classes="ha-left va-center"
+                       Text="{Binding StratumsList.Count}" />
+            <Button DockPanel.Dock="Right"
+                    Classes="ha-right"
+                    Content="+"
+                    Command="{Binding AddCommand}" />
+        </DockPanel>
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding StratumsList}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Expander MinWidth="300">
+                        <Expander.Header>
+                            <TextBlock>
+                                <Run Text="{Binding DimensionLabel}" />
+                                <Run Text="{Binding DensityLabel}" />
+                            </TextBlock>
+                        </Expander.Header>
+                        <DockPanel Classes="ha-stretch">
+                            <TextBlock DockPanel.Dock="Left"
+                                       Classes="ha-left va-center"
+                                       Text="{Binding PlacementLabel}" />
+                            <StackPanel DockPanel.Dock="Right"
+                                        Orientation="Vertical"
+                                        Classes="ha-right">
+                                <Button Content="P"
+                                        Command="{Binding}" />
+                                <Button Content="D"
+                                        Command="{Binding}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Expander>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</UserControl>
