@@ -44,10 +44,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Containers\StratumsListContainer\ObjectsListContainer.axaml" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\Client.Core\Client.Core.csproj" />
     </ItemGroup>
 </Project>

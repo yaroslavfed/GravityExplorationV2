@@ -1,6 +1,4 @@
-﻿using Client.Core.Extensions;
-
-namespace Client.Core.Data.Entities;
+﻿namespace Client.Core.Data.Entities;
 
 public record Stratum
 {
@@ -17,12 +15,6 @@ public record Stratum
         };
 
     public double Density { get; init; } = .0;
-
-    public string DimensionLabel => $"{this.GetWidth():0.##} x {this.GetDepth():0.##} x {this.GetHeight():0.##}";
-
-    public string PlacementLabel => $"{Placement.BoundsX}, {Placement.BoundsY}, {Placement.BoundsZ}";
-
-    public string DensityLabel => $"{Density:0.##} г/см\u00B3";
 
     public virtual bool Equals(Stratum? obj)
     {

@@ -1,0 +1,26 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="CardResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <Style Selector="Border#Container">
+        <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeWhiteColor}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource NormalBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource NormalCornerRadius}" />
+        <Setter Property="BoxShadow" Value="1 1 7 Black" />
+        <Setter Property="Padding" Value="10 0" />
+        <Setter Property="Margin" Value="4" />
+        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltMediumLowBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock#Title">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="Margin" Value="0 4" />
+        <Setter Property="Foreground" Value="{DynamicResource SystemAccentColorDark1}" />
+    </Style>
+</Styles>

@@ -1,54 +1,68 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reactive;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
 using Client.Avalonia.Properties;
-using Client.Core.Data;
-using Client.Core.Data.Entities;
 using Client.Core.Holders;
-using System.Reactive.Concurrency;
+using Avalonia.ReactiveUI;
+using Client.Avalonia.Data;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
 
 namespace Client.Avalonia.Containers.StratumsListContainer;
 
 public class StratumsListContainerViewModel : ViewModelBase
 {
-    private readonly IHolderService<Stratum>                 _holderService;
-    private readonly BehaviorSubject<IReadOnlyList<Stratum>> _stratumsList = new([]);
+    private readonly IHandlerService<StratumDto> _handlerService;
 
-    public StratumsListContainerViewModel(IHolderService<Stratum> holderService)
+    public StratumsListContainerViewModel(IHandlerService<StratumDto> handlerService)
     {
-        _holderService = holderService;
+        _handlerService = handlerService;
 
-        _holderService.DataList.ObserveOn(RxApp.MainThreadScheduler).ToPropertyEx(this, vm => vm.StratumsList);
+        StratumsList = _handlerService.UpdatedData;
 
-        AddCommand = ReactiveCommand.CreateFromTask(AddStratum);
+        CreateStratumCommand = ReactiveCommand.CreateFromTask(
+            CreateStratumAsync,
+            outputScheduler: AvaloniaScheduler.Instance
+        );
+
+        UpdateStratumCommand = ReactiveCommand.CreateFromTask<StratumDto>(
+            UpdateStratumAsync,
+            outputScheduler: AvaloniaScheduler.Instance
+        );
+
+        RemoveStratumCommand = ReactiveCommand.CreateFromTask<Guid>(
+            RemoveStratumAsync,
+            outputScheduler: AvaloniaScheduler.Instance
+        );
     }
 
-    protected override void OnActivation(CompositeDisposable disposables)
+    public IObservable<IReadOnlyList<StratumDto>> StratumsList { get; set; }
+
+    public ReactiveCommand<Unit, Unit> CreateStratumCommand { get; }
+
+    public ReactiveCommand<StratumDto, Unit> UpdateStratumCommand { get; }
+
+    public ReactiveCommand<Guid, Unit> RemoveStratumCommand { get; }
+
+    private async Task CreateStratumAsync()
     {
-        base.OnActivation(disposables);
-    }
-
-    [ObservableAsProperty]
-    public IReadOnlyList<Stratum> StratumsList { get; set; }
-
-    public ReactiveCommand<Unit, Unit> AddCommand { get; }
-
-    private async Task AddStratum()
-    {
-        var stratum = new Stratum
+        var stratum = new StratumDto
         {
             Id = Guid.NewGuid(),
             Dimensions = new() { Center = new() { X = 0, Y = 0, Z = 0 }, Bounds = new() { X = 1, Y = 1, Z = 1 } }
         };
 
-        await _holderService.Add(stratum);
+        await _handlerService.AddAsync(stratum);
+    }
+
+    private async Task UpdateStratumAsync(StratumDto stratum)
+    {
+        await _handlerService.UpdateAsync(stratum);
+    }
+
+    private async Task RemoveStratumAsync(Guid id)
+    {
+        await _handlerService.RemoveAsync(id);
     }
 }

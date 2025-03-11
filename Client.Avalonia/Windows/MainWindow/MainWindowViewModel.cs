@@ -10,7 +10,6 @@ namespace Client.Avalonia.Windows.MainWindow;
 
 public class MainWindowViewModel : ViewModelBase, IScreen
 {
-
     #region LifeCycle
 
     protected override void OnActivation(CompositeDisposable disposables)

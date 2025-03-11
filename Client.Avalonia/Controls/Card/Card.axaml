@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Name="CardControl"
+             x:Class="Client.Avalonia.Controls.Card.Card">
+    <UserControl.Styles>
+        <StyleInclude Source="CardStyles.axaml" />
+    </UserControl.Styles>
+
+    <UserControl.Template>
+        <ControlTemplate>
+            <Border x:Name="Container">
+                <Grid RowDefinitions="Auto *">
+                    <TextBlock Grid.Row="0" x:Name="Title"
+                               IsVisible="{Binding #CardControl.Title, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                               Text="{Binding #CardControl.Title}" MinHeight="0" />
+                    <ContentPresenter Grid.Row="1" Content="{TemplateBinding Content}" />
+                </Grid>
+            </Border>
+        </ControlTemplate>
+    </UserControl.Template>
+</UserControl>
