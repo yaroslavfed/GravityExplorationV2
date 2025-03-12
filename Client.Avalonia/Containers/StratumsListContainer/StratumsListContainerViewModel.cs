@@ -65,11 +65,9 @@ public class StratumsListContainerViewModel : ViewModelBase
     private void UpdateCollection(IReadOnlyList<Stratum> source)
     {
         foreach (var oldItem in _stratumsList.ToList())
-            if (source.All(x => x.Id != oldItem.Id))
-                _stratumsList.Remove(oldItem);
+            _stratumsList.Remove(oldItem);
 
         foreach (var newItem in source)
-            if (_stratumsList.All(x => x.Id != newItem.Id))
-                _stratumsList.Add(newItem);
+            _stratumsList.Add(newItem);
     }
 }

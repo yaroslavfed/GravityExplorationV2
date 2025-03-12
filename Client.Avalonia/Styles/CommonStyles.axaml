@@ -45,7 +45,6 @@
         <Setter Property="Margin" Value="0" />
     </Style>
 
-
     <Style Selector=":is(Control).m-1">
         <Setter Property="Margin" Value="4" />
     </Style>
@@ -65,6 +64,10 @@
     <Style Selector=":is(Control).mb-2">
         <Setter Property="Margin" Value="0 0 0 8" />
     </Style>
+    
+    <Style Selector=":is(Control).mb-3">
+        <Setter Property="Margin" Value="0 0 0 16" />
+    </Style>
 
     <Style Selector=":is(Control).mt-1">
         <Setter Property="Margin" Value="0 4 0 0" />
@@ -72,10 +75,6 @@
 
     <Style Selector=":is(Control).mt-2">
         <Setter Property="Margin" Value="0 8 0 0" />
-    </Style>
-
-    <Style Selector=":is(Control).mt-3">
-        <Setter Property="Margin" Value="0 16 0 0" />
     </Style>
 
     <Style Selector=":is(Control).mx-1">
@@ -93,9 +92,9 @@
     <Style Selector=":is(Control).my-2">
         <Setter Property="Margin" Value="0 8" />
     </Style>
-
-    <Style Selector=":is(Control).my-4">
-        <Setter Property="Margin" Value="0 24" />
+    
+    <Style Selector=":is(Control).my-3">
+        <Setter Property="Margin" Value="0 16" />
     </Style>
 
     <Style Selector=":is(Control).ml-1">
@@ -114,10 +113,33 @@
         <Setter Property="Margin" Value="0 0 8 0" />
     </Style>
 
-    <Style Selector=":is(TextBlock).pr-2">
-        <Setter Property="Padding" Value="0 0 8 0" />
+    <Style Selector=":is(TextBlock).p-1">
+        <Setter Property="Padding" Value="4" />
+    </Style>
+    
+    <Style Selector=":is(TextBlock).p-0">
+        <Setter Property="Padding" Value="0" />
+    </Style>
+    
+    <Style Selector=":is(TextBlock).p-1">
+        <Setter Property="Padding" Value="4" />
     </Style>
 
+    <Style Selector=":is(TextBlock).p-2">
+        <Setter Property="Padding" Value="8" />
+    </Style>
+    
+    <Style Selector=":is(TextBlock).p-3">
+        <Setter Property="Padding" Value="16" />
+    </Style>
+    
+    <Style Selector=":is(TextBlock).align-center">
+        <Setter Property="TextAlignment" Value="Center" />
+    </Style>
+    <Style Selector=":is(TextBlock).align-justify">
+        <Setter Property="TextAlignment" Value="Justify" />
+    </Style>
+    
     <Style Selector=":is(Button).hca-center">
         <Setter Property="HorizontalContentAlignment" Value="Center" />
     </Style>

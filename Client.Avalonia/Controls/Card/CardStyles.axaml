@@ -12,8 +12,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeWhiteColor}" />
         <Setter Property="BorderThickness" Value="{DynamicResource NormalBorderThickness}" />
         <Setter Property="CornerRadius" Value="{DynamicResource NormalCornerRadius}" />
-        <Setter Property="BoxShadow" Value="1 1 7 Black" />
-        <Setter Property="Padding" Value="10 0" />
+        <Setter Property="BoxShadow" Value="1 1 7 Gray" />
         <Setter Property="Margin" Value="4" />
         <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltMediumLowBrush}" />
     </Style>
