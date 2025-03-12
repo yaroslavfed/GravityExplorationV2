@@ -24,7 +24,18 @@
                         <DataTemplate>
                             <Expander Margin="0 6" Classes="ha-stretch">
                                 <Expander.Header>
-                                    <TextBlock Text="{Binding DensityLabel, StringFormat='Объект плотностью {0}'}" />
+                                    <Grid Classes="ha-stretch va-stretch">
+                                        <ToolTip.Tip>
+                                            <StackPanel>
+                                                <TextBlock Classes="align-justify"
+                                                           FontWeight="Bold"
+                                                           Text="{Binding DimensionLabel}" />
+                                                <TextBlock Classes="align-justify"
+                                                           Text="{Binding PlacementLabel}" />
+                                            </StackPanel>
+                                        </ToolTip.Tip>
+                                        <TextBlock Text="{Binding DensityLabel, StringFormat='Объект плотностью {0}'}" />
+                                    </Grid>
                                 </Expander.Header>
                                 <Grid Classes="ha-stretch" RowDefinitions="Auto Auto *">
                                     <Grid Grid.Row="0" DockPanel.Dock="Bottom" ColumnDefinitions="* *" Classes="mb-1">
