@@ -1,4 +1,5 @@
-﻿using Avalonia.ReactiveUI;
+﻿using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
 using ReactiveUI;
 
 namespace Client.Avalonia.Containers.StratumsListContainer;
@@ -7,7 +8,7 @@ public partial class StratumsListContainer : ReactiveUserControl<StratumsListCon
 {
     public StratumsListContainer()
     {
-        DataContext = this;
-        InitializeComponent();
+        this.WhenActivated(disposables => { });
+        AvaloniaXamlLoader.Load(this);
     }
 }

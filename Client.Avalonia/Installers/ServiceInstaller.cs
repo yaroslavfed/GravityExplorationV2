@@ -1,7 +1,7 @@
 ﻿using Autofac;
-using Client.Avalonia.Data;
-using Client.Core.Holders;
-using Client.Core.Holders.StratumHolder;
+using Client.Avalonia.Models;
+using Client.Avalonia.Services.StratumHandlerService;
+using Client.Core.Services.HandlerService;
 
 namespace Client.Avalonia.Installers;
 
@@ -9,6 +9,6 @@ static internal class ServiceInstaller
 {
     public static void RegisterServices(this ContainerBuilder builder)
     {
-        builder.RegisterType<StratumHandler<StratumDto>>().As<IHandlerService<StratumDto>>().SingleInstance();
+        builder.RegisterType<StratumHandlerService>().As<IHandlerService<Stratum>>().SingleInstance();
     }
 }

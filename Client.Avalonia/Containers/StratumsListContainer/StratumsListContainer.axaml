@@ -3,47 +3,70 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:objectsListContainer="clr-namespace:Client.Avalonia.Containers.StratumsListContainer"
-             xmlns:card="clr-namespace:Client.Avalonia.Controls.Card"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Client.Avalonia.Containers.StratumsListContainer.StratumsListContainer"
              x:DataType="objectsListContainer:StratumsListContainerViewModel">
-        <Grid RowDefinitions="Auto *">
-            <DockPanel Grid.Row="0" Classes="ha-stretch">
-                <TextBlock DockPanel.Dock="Left"
-                           Classes="ha-left va-center"
-                           Text="{Binding StratumsList^.Count}" />
-                <Button DockPanel.Dock="Right"
-                        Classes="ha-right"
-                        Content="+"
-                        Command="{Binding CreateStratumCommand}" />
-            </DockPanel>
-            <ScrollViewer Grid.Row="1">
-                <ItemsControl ItemsSource="{Binding StratumsList^}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Expander MinWidth="300">
-                                <Expander.Header>
-                                    <TextBlock>
-                                        <Run Text="{Binding DimensionLabel}" />
-                                        <Run Text="{Binding DensityLabel}" />
-                                    </TextBlock>
-                                </Expander.Header>
-                                <DockPanel Classes="ha-stretch">
-                                    <TextBlock DockPanel.Dock="Left"
-                                               Classes="ha-left va-center"
-                                               Text="{Binding PlacementLabel}" />
-                                    <StackPanel DockPanel.Dock="Right"
-                                                Orientation="Vertical"
-                                                Classes="ha-right">
-                                        <Button Content="Remove"
-                                                Command="{Binding}"
-                                                CommandParameter="{Binding Id}" />
+    <Design.DataContext>
+        <!-- ReSharper disable once Xaml.ConstructorWarning -->
+        <objectsListContainer:StratumsListContainerViewModel />
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto *">
+        <DockPanel Grid.Row="0" Classes="ha-stretch">
+            <TextBlock DockPanel.Dock="Left"
+                       Classes="ha-left va-center"
+                       Text="{Binding StratumsList.Count}" />
+            <Button DockPanel.Dock="Right"
+                    Classes="ha-right"
+                    Content="+"
+                    Command="{Binding CreateStratumCommand}" />
+        </DockPanel>
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding StratumsList}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Expander MinWidth="300">
+                            <Expander.Header>
+                                <TextBlock>
+                                    <Run Text="Объект с плотностью " /><Run Text="{Binding DensityLabel}" />
+                                </TextBlock>
+                            </Expander.Header>
+                            <DockPanel Classes="ha-stretch">
+                                <StackPanel Orientation="Vertical">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Dimensions.Center.X" />
+                                        <TextBox Text="{Binding CenterX}" />
                                     </StackPanel>
-                                </DockPanel>
-                            </Expander>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Grid>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Dimensions.Center.Y" />
+                                        <TextBox Text="{Binding CenterY}" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Dimensions.Center.Z" />
+                                        <TextBox Text="{Binding CenterZ}" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Density" />
+                                        <TextBox Text="{Binding Density}" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel DockPanel.Dock="Right"
+                                            Orientation="Vertical"
+                                            Classes="ha-right">
+                                    <!-- ReSharper disable once Xaml.PossibleNullReferenceException -->
+                                    <Button Content="Update"
+                                            Command="{Binding $parent[objectsListContainer:StratumsListContainer].((objectsListContainer:StratumsListContainerViewModel)DataContext).UpdateStratumCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    <!-- ReSharper disable once Xaml.PossibleNullReferenceException -->
+                                    <Button Content="Remove"
+                                            Command="{Binding $parent[objectsListContainer:StratumsListContainer].((objectsListContainer:StratumsListContainerViewModel)DataContext).RemoveStratumCommand}"
+                                            CommandParameter="{Binding Id}" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Expander>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
 </UserControl>
