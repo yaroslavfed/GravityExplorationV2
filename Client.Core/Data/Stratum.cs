@@ -1,30 +1,27 @@
-﻿using System;
-using Client.Avalonia.Extensions;
-using Client.Core.Data;
-using ReactiveUI.Fody.Helpers;
+﻿using Client.Core.Extensions;
 
-namespace Client.Avalonia.Models;
+namespace Client.Core.Data;
 
 public record Stratum
 {
     public required Guid Id { get; init; }
 
-    public double CenterX { get; init; } = 0.0;
+    public double CenterX { get; init; } = .0;
 
     public double StepX { get; init; } = 1.0;
 
-    public double CenterY { get; init; } = 0.0;
+    public double CenterY { get; init; } = .0;
 
     public double StepY { get; init; } = 1.0;
 
-    public double CenterZ { get; init; } = 0.0;
+    public double CenterZ { get; init; } = .0;
 
     public double StepZ { get; init; } = 1.0;
 
     public double Density { get; init; } = 0.0;
 
     public bool IsActive { get; set; } = false;
-
+    
     public Placement Placement =>
         new()
         {

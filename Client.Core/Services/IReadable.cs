@@ -2,7 +2,7 @@
 
 public interface IReadable<TData>
 {
-    Task<TData> Get(Guid id);
+    Task<TData> GetAsync(Guid id);
 
-    Task<IReadOnlyList<TData>> GetAll();
+    Task<IReadOnlyList<TData>> GetAllAsync();
 }

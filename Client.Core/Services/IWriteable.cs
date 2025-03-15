@@ -2,9 +2,7 @@
 
 public interface IWriteable<in TData>
 {
-    Task Add(TData data);
+    Task AddAsync(TData data);
 
-    Task Update(TData data);
-
-    Task Delete(Guid data);
+    Task RemoveAsync(Guid data);
 }

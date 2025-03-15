@@ -2,7 +2,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:card="clr-namespace:Client.Avalonia.Controls.Card"
+             xmlns:plotCanvas="clr-namespace:Client.Avalonia.Controls.PlotCanvas"
+             xmlns:plotsContainer="clr-namespace:Client.Avalonia.Containers.PlotsContainer"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Client.Avalonia.Containers.PlotsContainer.PlotsContainer">
-    Plots
+             x:Class="Client.Avalonia.Containers.PlotsContainer.PlotsContainer"
+             x:DataType="plotsContainer:PlotsContainerViewModel">
+    <card:Card>
+        <Grid >
+            <plotCanvas:PlotCanvas x:Name="Canvas" />
+        </Grid>
+    </card:Card>
 </UserControl>

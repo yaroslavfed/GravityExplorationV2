@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Threading.Tasks;
-using Client.Avalonia.Models;
-using Client.Core.Services.HandlerService;
+using Client.Core.Data;
 
-namespace Client.Avalonia.Services.StratumHandlerService;
+namespace Client.Core.Services.StratumHandlerService;
 
 public class StratumHandlerService : IHandlerService<Stratum>
 {

@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Client.Avalonia.Installers;
+using Client.Core.Installers;
 
 namespace Client.Avalonia.Properties;
 

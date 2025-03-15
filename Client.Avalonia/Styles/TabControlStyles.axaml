@@ -1,0 +1,34 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style Selector="TabControl">
+        <Setter Property="Margin" Value="-12 0" />
+    </Style>
+
+    <Style Selector="TabControl>HeaderedContentControl">
+        <Setter Property="FontSize" Value="18" />
+    </Style>
+
+    <Style Selector="TabControl WrapPanel">
+        <Setter Property="MaxHeight" Value="25" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,8,0,8" />
+    </Style>
+
+    <Style Selector="TabItem">
+        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0 0 0 0" />
+        <Setter Property="Padding" Value="20 10" />
+        <Setter Property="BorderThickness" Value="0 0 0 0" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TabItem > TextBlock">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+    </Style>
+
+</Styles>

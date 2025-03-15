@@ -1,0 +1,78 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:computationalDomain="clr-namespace:Client.Avalonia.Containers.AreaSettingsContainer.ComputationalDomain"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Client.Avalonia.Containers.AreaSettingsContainer.ComputationalDomain.ComputationalDomainSettings"
+             x:DataType="computationalDomain:ComputationalDomainSettingsViewModel">
+    <Design.DataContext>
+        <!-- ReSharper disable once Xaml.ConstructorWarning -->
+        <computationalDomain:ComputationalDomainSettingsViewModel />
+    </Design.DataContext>
+    
+    <Grid RowDefinitions="Auto *" Classes="m-2">
+        <Button Grid.Row="0"
+                Classes="va-stretch ha-stretch hca-center"
+                Content="Сохранить сетку"
+                Command="{Binding SaveDomainCommand}" />
+        <Grid Row="1" RowDefinitions="Auto Auto Auto Auto">
+            <Grid Grid.Row="0" RowDefinitions="* * * *" ColumnDefinitions="Auto * *" Classes="va-top m-2">
+                <TextBlock Grid.Row="0" Grid.Column="1"
+                           Classes="text-wrap text-center mb-1"
+                           Text="{Binding StartCoordinateLabel}" />
+                <TextBlock Grid.Row="0" Grid.Column="2"
+                           Classes="text-wrap text-center mb-1"
+                           Text="{Binding EndCoordinateLabel}" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Classes="va-center" Text="OX:" />
+                <TextBox Grid.Row="1" Grid.Column="1"
+                         Classes="ha-stretch m-2"
+                         Text="{Binding ComputationalDomain.StartX}" />
+                <TextBox Grid.Row="1" Grid.Column="2"
+                         Classes="ha-stretch m-2"
+                         Text="{Binding ComputationalDomain.EndX}" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Classes="va-center" Text="OY:" />
+                <TextBox Grid.Row="2" Grid.Column="1"
+                         Classes="ha-stretch m-2"
+                         Text="{Binding ComputationalDomain.StartY}" />
+                <TextBox Grid.Row="2" Grid.Column="2"
+                         Classes="ha-stretch m-2"
+                         Text="{Binding ComputationalDomain.EndY}" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Classes="va-center" Text="OZ:" />
+                <TextBox Grid.Row="3" Grid.Column="1"
+                         Classes="ha-stretch m-2"
+                         Text="{Binding ComputationalDomain.StartZ}" />
+                <TextBox Grid.Row="3" Grid.Column="2"
+                         Classes="ha-stretch m-2"
+                         Text="{Binding ComputationalDomain.EndZ}" />
+            </Grid>
+            <Separator Grid.Row="1" />
+            <Grid Grid.Row="2" RowDefinitions="* * * *" ColumnDefinitions="Auto * *" Classes="va-top m-2">
+                <TextBlock Grid.Row="0" Grid.Column="1"
+                           Classes="text-wrap text-center mb-1"
+                           Text="{Binding SplittingParamsLabel}" />
+                <TextBlock Grid.Row="0" Grid.Column="2"
+                           Classes="text-wrap text-center mb-1"
+                           Text="{Binding MultyParamsLabel}" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Classes="va-center" Text="OX:" />
+                <TextBox Grid.Row="1" Grid.Column="1"
+                         Classes="ha-stretch m-2"
+                         Text="{Binding ComputationalDomain.SplitsXCount}" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Classes="va-center" Text="OY:" />
+                <TextBox Grid.Row="2" Grid.Column="1"
+                         Classes="ha-stretch m-2"
+                         Text="{Binding ComputationalDomain.SplitsYCount}" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Classes="va-center" Text="OZ:" />
+                <TextBox Grid.Row="3" Grid.Column="1"
+                         Classes="ha-stretch m-2"
+                         Text="{Binding ComputationalDomain.SplitsZCount}" />
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

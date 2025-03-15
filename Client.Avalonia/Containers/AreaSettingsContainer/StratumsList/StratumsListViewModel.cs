@@ -5,20 +5,20 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using Client.Avalonia.Properties;
 using Avalonia.ReactiveUI;
-using Client.Avalonia.Models;
-using Client.Core.Services.HandlerService;
+using Client.Avalonia.Properties;
+using Client.Core.Data;
+using Client.Core.Services;
 using ReactiveUI;
 
-namespace Client.Avalonia.Containers.StratumsListContainer;
+namespace Client.Avalonia.Containers.AreaSettingsContainer.StratumsList;
 
-public class StratumsListContainerViewModel : ViewModelBase
+public class StratumsListViewModel : ViewModelBase
 {
     private readonly IHandlerService<Stratum>      _handlerService;
     private readonly ObservableCollection<Stratum> _stratumsList = [];
 
-    public StratumsListContainerViewModel(IHandlerService<Stratum> handlerService)
+    public StratumsListViewModel(IHandlerService<Stratum> handlerService)
     {
         _handlerService = handlerService;
 
@@ -52,9 +52,9 @@ public class StratumsListContainerViewModel : ViewModelBase
         await _handlerService.AddAsync(new() { Id = Guid.NewGuid() });
     }
 
-    private async Task UpdateStratumAsync(Stratum stratum)
+    private async Task UpdateStratumAsync(Stratum Stratum)
     {
-        await _handlerService.UpdateAsync(stratum);
+        await _handlerService.UpdateAsync(Stratum);
     }
 
     private async Task RemoveStratumAsync(Guid id)

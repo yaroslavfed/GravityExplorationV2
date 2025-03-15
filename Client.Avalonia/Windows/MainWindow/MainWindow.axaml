@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Client.Avalonia.Windows.MainWindow"
         xmlns:plotsContainer="clr-namespace:Client.Avalonia.Containers.PlotsContainer"
-        xmlns:stratumsListContainer="clr-namespace:Client.Avalonia.Containers.StratumsListContainer"
+        xmlns:areaSettingsContainer="clr-namespace:Client.Avalonia.Containers.AreaSettingsContainer"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Client.Avalonia.Windows.MainWindow.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -17,11 +17,13 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <DockPanel Classes="ha-stretch">
-        <stratumsListContainer:StratumsListContainer DockPanel.Dock="Left"
-                                                   DataContext="{Binding ObjectsListContainerViewModel}" />
-        <plotsContainer:PlotsContainer DockPanel.Dock="Right"
+    <Grid Classes="ha-stretch" ColumnDefinitions="Auto *">
+        <areaSettingsContainer:AreaSettingsContainer Grid.Column="0"
+                                                     Margin="8 8 4 8"
+                                                     DataContext="{Binding AreaSettingsContainerViewModel}" />
+        <plotsContainer:PlotsContainer Grid.Column="1"
+                                       Margin="4 8 8 8"
                                        DataContext="{Binding PlotsContainerViewModel}" />
-    </DockPanel>
+    </Grid>
 
 </Window>

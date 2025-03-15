@@ -1,4 +1,4 @@
-﻿namespace Client.Core.Services.HandlerService;
+﻿namespace Client.Core.Services;
 
 public interface IHandlerService<TData>
 {

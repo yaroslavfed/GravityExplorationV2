@@ -1,6 +1,8 @@
 ﻿using Autofac;
+using Client.Avalonia.Containers.AreaSettingsContainer;
+using Client.Avalonia.Containers.AreaSettingsContainer.ComputationalDomain;
+using Client.Avalonia.Containers.AreaSettingsContainer.StratumsList;
 using Client.Avalonia.Containers.PlotsContainer;
-using Client.Avalonia.Containers.StratumsListContainer;
 using Client.Avalonia.Windows.MainWindow;
 using ReactiveUI;
 
@@ -11,7 +13,9 @@ static internal class ViewModelInstaller
     public static void RegisterViewModels(this ContainerBuilder builder)
     {
         builder.RegisterType<MainWindowViewModel>().AsSelf().As<IScreen>().SingleInstance();
-        builder.RegisterType<StratumsListContainerViewModel>();
+        builder.RegisterType<AreaSettingsContainerViewModel>();
+        builder.RegisterType<StratumsListViewModel>();
+        builder.RegisterType<ComputationalDomainSettingsViewModel>();
         builder.RegisterType<PlotsContainerViewModel>();
     }
 }

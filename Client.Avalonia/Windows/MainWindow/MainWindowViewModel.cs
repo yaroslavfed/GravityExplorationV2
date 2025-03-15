@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Disposables;
+using Client.Avalonia.Containers.AreaSettingsContainer;
 using Client.Avalonia.Containers.PlotsContainer;
-using Client.Avalonia.Containers.StratumsListContainer;
 using Client.Avalonia.Properties;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -10,35 +10,18 @@ namespace Client.Avalonia.Windows.MainWindow;
 
 public class MainWindowViewModel : ViewModelBase, IScreen
 {
-    #region LifeCycle
-
-    protected override void OnActivation(CompositeDisposable disposables)
+    public MainWindowViewModel(
+        AreaSettingsContainerViewModel areaSettingsContainerViewModel,
+        PlotsContainerViewModel plotsContainerViewModel
+    )
     {
-        InitializeControls();
+        AreaSettingsContainerViewModel = areaSettingsContainerViewModel;
+        PlotsContainerViewModel = plotsContainerViewModel;
     }
-
-    #endregion
-
-    #region Properties
 
     public RoutingState Router { get; set; } = new();
 
-    [Reactive]
-    public StratumsListContainerViewModel? ObjectsListContainerViewModel { get; private set; }
-    
-    [Reactive]
-    public PlotsContainerViewModel? PlotsContainerViewModel { get; private set; }
+    public AreaSettingsContainerViewModel AreaSettingsContainerViewModel { get; }
 
-    #endregion
-
-    #region Methods
-
-    private void InitializeControls()
-    {
-        ObjectsListContainerViewModel = Locator.Current.GetService<StratumsListContainerViewModel>();
-        PlotsContainerViewModel = Locator.Current.GetService<PlotsContainerViewModel>();
-    }
-
-    #endregion
-
+    public PlotsContainerViewModel PlotsContainerViewModel { get; }
 }

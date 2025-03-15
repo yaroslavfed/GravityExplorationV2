@@ -1,6 +1,6 @@
-﻿using Client.Avalonia.Models;
+﻿using Client.Core.Data;
 
-namespace Client.Avalonia.Extensions;
+namespace Client.Core.Extensions;
 
 public static class StratumExtensions
 {

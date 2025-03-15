@@ -1,0 +1,94 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:stratumsList="clr-namespace:Client.Avalonia.Containers.AreaSettingsContainer.StratumsList"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Client.Avalonia.Containers.AreaSettingsContainer.StratumsList.StratumsList"
+             x:DataType="stratumsList:StratumsListViewModel">
+    <Design.DataContext>
+        <!-- ReSharper disable once Xaml.ConstructorWarning -->
+        <stratumsList:StratumsListViewModel />
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto *" Classes="m-2">
+        <Button Grid.Row="0"
+                Classes="va-stretch ha-stretch hca-center"
+                Content="Добавить объект"
+                Command="{Binding CreateStratumCommand}" />
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding StratumsList}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Expander Margin="0 6" Classes="ha-stretch">
+                            <Expander.Header>
+                                <Grid Classes="ha-stretch va-stretch">
+                                    <ToolTip.Tip>
+                                        <StackPanel>
+                                            <TextBlock Classes="align-justify"
+                                                       FontWeight="Bold"
+                                                       Text="{Binding DimensionLabel}" />
+                                            <TextBlock Classes="align-justify"
+                                                       Text="{Binding PlacementLabel}" />
+                                        </StackPanel>
+                                    </ToolTip.Tip>
+                                    <TextBlock Text="{Binding DensityLabel, StringFormat='Объект плотностью {0}'}" />
+                                </Grid>
+                            </Expander.Header>
+                            <Grid Classes="ha-stretch" RowDefinitions="Auto Auto *">
+                                <Grid Grid.Row="0" DockPanel.Dock="Bottom" ColumnDefinitions="* *" Classes="mb-1">
+                                    <!-- ReSharper disable once Xaml.PossibleNullReferenceException -->
+                                    <Button Grid.Column="0"
+                                            Classes="ha-stretch hca-center mr-1"
+                                            Content="Изменить"
+                                            Command="{Binding $parent[stratumsList:StratumsList].((stratumsList:StratumsListViewModel)DataContext).UpdateStratumCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    <!-- ReSharper disable once Xaml.PossibleNullReferenceException -->
+                                    <Button Grid.Column="1"
+                                            Classes="ha-stretch hca-center ml-1"
+                                            Content="Удалить"
+                                            Command="{Binding $parent[stratumsList:StratumsList].((stratumsList:StratumsListViewModel)DataContext).RemoveStratumCommand}"
+                                            CommandParameter="{Binding Id}" />
+                                </Grid>
+                                <Separator Grid.Row="1" Classes="my-1" />
+                                <Grid Row="2" RowDefinitions="* * * * Auto *" ColumnDefinitions="* *"
+                                      Classes="mt-1">
+                                    <Grid ColumnDefinitions="* *" Grid.Row="0" Grid.Column="0" Classes="mb-2">
+                                        <TextBlock Classes="ha-left va-center" Grid.Column="0" Text="CenterX" />
+                                        <TextBox Grid.Column="1" Classes="va-center mx-1" Text="{Binding CenterX}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="* *" Grid.Row="0" Grid.Column="1" Classes="mb-2">
+                                        <TextBlock Classes="ha-left va-center ml-1" Grid.Column="0" Text="StepX" />
+                                        <TextBox Grid.Column="1" Classes="va-center ml-1" Text="{Binding StepX}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="* *" Grid.Row="1" Grid.Column="0" Classes="my-2">
+                                        <TextBlock Classes="ha-left va-center" Grid.Column="0" Text="CenterY" />
+                                        <TextBox Grid.Column="1" Classes="va-center mx-1" Text="{Binding CenterY}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="* *" Grid.Row="1" Grid.Column="1" Classes="my-2">
+                                        <TextBlock Classes="ha-left va-center ml-1" Grid.Column="0" Text="StepY" />
+                                        <TextBox Grid.Column="1" Classes="va-center ml-1" Text="{Binding StepY}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="* *" Grid.Row="2" Grid.Column="0" Classes="my-2">
+                                        <TextBlock Classes="ha-left va-center" Grid.Column="0" Text="CenterZ" />
+                                        <TextBox Grid.Column="1" Classes="va-center mx-1" Text="{Binding CenterZ}" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="* *" Grid.Row="2" Grid.Column="1" Classes="my-2">
+                                        <TextBlock Classes="ha-left va-center ml-1" Grid.Column="0" Text="StepZ" />
+                                        <TextBox Grid.Column="1" Classes="va-center ml-1" Text="{Binding StepZ}" />
+                                    </Grid>
+                                    <Separator Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Classes="mb-1" />
+                                    <Grid Row="4" Column="0" ColumnSpan="2"
+                                          ColumnDefinitions="* * * *" Classes="mt-1">
+                                        <TextBlock Classes="ha-left va-center" Grid.Column="0" Text="Density" />
+                                        <TextBox Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Density}" />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Expander>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

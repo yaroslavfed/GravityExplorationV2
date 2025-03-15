@@ -1,7 +1,7 @@
 ﻿using Autofac;
 using AutoMapper;
 
-namespace Client.Avalonia.Installers;
+namespace Client.Core.Installers;
 
 public static class AutoMapperConfigurationInstaller
 {
