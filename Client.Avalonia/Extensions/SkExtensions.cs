@@ -9,7 +9,8 @@ public static class SkExtensions
     ///  Метод для получения Skia-прямоугольника
     /// </summary>
     /// <returns></returns>
-    public static SKRect ToSkRect(this Stratum stratumClientDto)
+    // ReSharper disable once InconsistentNaming
+    public static SKRect ToSKRect(this Stratum stratumClientDto)
     {
         return new SKRect(
             (float)(stratumClientDto.CenterX - stratumClientDto.StepX),

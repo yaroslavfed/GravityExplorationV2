@@ -51,13 +51,13 @@ public class ComputationalDomainSettingsViewModel : ViewModelBase
     public string MultyParamsLabel { get; set; } = "Коэффициент разрядки:";
 
     [Reactive]
-    public Domain ComputationalDomain { get; private set; }
+    public Domain? ComputationalDomain { get; private set; }
 
     public ReactiveCommand<Unit, Unit> SaveDomainCommand { get; }
 
     private Task SaveComputationalDomain()
     {
-        _domainService.UpdateAsync(ComputationalDomain);
+        _domainService.UpdateAsync(ComputationalDomain!);
         return Task.CompletedTask;
     }
 }
