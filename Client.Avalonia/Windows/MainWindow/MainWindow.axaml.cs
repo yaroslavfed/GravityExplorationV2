@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 
@@ -9,9 +10,12 @@ public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
         InitializeComponent();
     }
-    
+
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);
+#if DEBUG
+        this.AttachDevTools();
+#endif
     }
 }
