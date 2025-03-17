@@ -6,34 +6,37 @@ public record Stratum
 {
     public required Guid Id { get; init; }
 
-    public double CenterX { get; init; } = .0;
+    public double StartX { get; init; }
 
-    public double StepX { get; init; } = 1.0;
+    public double EndX { get; init; }
 
-    public double CenterY { get; init; } = .0;
+    public double StartY { get; init; }
 
-    public double StepY { get; init; } = 1.0;
+    public double EndY { get; init; }
 
-    public double CenterZ { get; init; } = .0;
+    public double StartZ { get; init; }
 
-    public double StepZ { get; init; } = 1.0;
+    public double EndZ { get; init; }
 
     public double Density { get; init; } = 0.0;
 
     public bool IsActive { get; set; } = false;
-    
+
     public Placement Placement =>
         new()
         {
-            BoundsX = (CenterX - StepX, CenterX + StepX),
-            BoundsY = (CenterY - StepY, CenterY + StepY),
-            BoundsZ = (CenterZ - StepZ, CenterZ + StepZ)
+            Position = new()
+            {
+                X = (EndX - StartX) / 2 + StartX,
+                Y = (EndY - StartY) / 2 + StartY,
+                Z = (EndZ - StartZ) / 2 + StartZ
+            },
+            StepToBound = new() { X = (EndX - StartX) / 2, Y = (EndY - StartY) / 2, Z = (EndZ - StartZ) / 2 }
         };
 
     public string DimensionLabel => $"[{this.GetWidth():0.##} x {this.GetDepth():0.##} x {this.GetHeight():0.##}]";
 
-    public string PlacementLabel =>
-        $"OX: {Placement.BoundsX.Min} -> {Placement.BoundsX.Max}\nOY: {Placement.BoundsY.Min} -> {Placement.BoundsY.Max}\nOZ: {Placement.BoundsZ.Min} -> {Placement.BoundsZ.Max}";
+    public string PlacementLabel => $"OX: {StartX} -> {EndX}\nOY: {StartY} -> {EndY}\nOZ: {StartZ} -> {EndZ}";
 
     public string DensityLabel => $"{Density:0.##} г/см\u00B3";
 }

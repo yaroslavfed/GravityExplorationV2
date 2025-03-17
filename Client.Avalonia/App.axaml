@@ -1,11 +1,16 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:Client.Avalonia.Converters"
              x:Class="Client.Avalonia.App"
              RequestedThemeVariant="Light">
 
     <Application.Styles>
         <StyleInclude Source="/Styles/CommonStyles.axaml" />
     </Application.Styles>
+
+    <Application.Resources>
+        <converters:NumericValidationRule x:Key="NumericValidationRule"/>
+    </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />

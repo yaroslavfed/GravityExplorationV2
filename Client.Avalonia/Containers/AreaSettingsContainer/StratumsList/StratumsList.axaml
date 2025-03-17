@@ -50,38 +50,69 @@
                                             Command="{Binding $parent[stratumsList:StratumsList].((stratumsList:StratumsListViewModel)DataContext).RemoveStratumCommand}"
                                             CommandParameter="{Binding Id}" />
                                 </Grid>
+
                                 <Separator Grid.Row="1" Classes="my-1" />
-                                <Grid Row="2" RowDefinitions="* * * * Auto *" ColumnDefinitions="* *"
+
+                                <Grid Row="2"
+                                      RowDefinitions="Auto * * * * Auto *"
+                                      ColumnDefinitions="Auto * *"
                                       Classes="mt-1">
-                                    <Grid ColumnDefinitions="* *" Grid.Row="0" Grid.Column="0" Classes="mb-2">
-                                        <TextBlock Classes="ha-left va-center" Grid.Column="0" Text="CenterX" />
-                                        <TextBox Grid.Column="1" Classes="va-center mx-1" Text="{Binding CenterX}" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="* *" Grid.Row="0" Grid.Column="1" Classes="mb-2">
-                                        <TextBlock Classes="ha-left va-center ml-1" Grid.Column="0" Text="StepX" />
-                                        <TextBox Grid.Column="1" Classes="va-center ml-1" Text="{Binding StepX}" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="* *" Grid.Row="1" Grid.Column="0" Classes="my-2">
-                                        <TextBlock Classes="ha-left va-center" Grid.Column="0" Text="CenterY" />
-                                        <TextBox Grid.Column="1" Classes="va-center mx-1" Text="{Binding CenterY}" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="* *" Grid.Row="1" Grid.Column="1" Classes="my-2">
-                                        <TextBlock Classes="ha-left va-center ml-1" Grid.Column="0" Text="StepY" />
-                                        <TextBox Grid.Column="1" Classes="va-center ml-1" Text="{Binding StepY}" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="* *" Grid.Row="2" Grid.Column="0" Classes="my-2">
-                                        <TextBlock Classes="ha-left va-center" Grid.Column="0" Text="CenterZ" />
-                                        <TextBox Grid.Column="1" Classes="va-center mx-1" Text="{Binding CenterZ}" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="* *" Grid.Row="2" Grid.Column="1" Classes="my-2">
-                                        <TextBlock Classes="ha-left va-center ml-1" Grid.Column="0" Text="StepZ" />
-                                        <TextBox Grid.Column="1" Classes="va-center ml-1" Text="{Binding StepZ}" />
-                                    </Grid>
-                                    <Separator Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Classes="mb-1" />
-                                    <Grid Row="4" Column="0" ColumnSpan="2"
-                                          ColumnDefinitions="* * * *" Classes="mt-1">
-                                        <TextBlock Classes="ha-left va-center" Grid.Column="0" Text="Density" />
-                                        <TextBox Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Density}" />
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="1"
+                                               Classes="ha-left va-center mb-2"
+                                               Text="Нижняя граница" />
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="2"
+                                               Classes="ha-left va-center mb-2"
+                                               Text="Верхняя граница" />
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0"
+                                               Classes="va-center ha-left mr-2"
+                                               Text="OX:" />
+                                    <TextBox Grid.Row="1" Grid.Column="1"
+                                             Classes="va-center ha-stretch"
+                                             Margin="0 0 4 4"
+                                             Text="{Binding StartX, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
+                                    <TextBox Grid.Row="1" Grid.Column="2"
+                                             Classes="va-center ha-stretch"
+                                             Margin="2 0 0 4"
+                                             Text="{Binding EndX, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0"
+                                               Classes="va-center ha-left mr-2"
+                                               Text="OY:" />
+                                    <TextBox Grid.Row="2" Grid.Column="1"
+                                             Classes="va-center ha-stretch"
+                                             Margin="0 0 4 4"
+                                             Text="{Binding StartY, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
+                                    <TextBox Grid.Row="2" Grid.Column="2"
+                                             Classes="va-center ha-stretch"
+                                             Margin="2 0 0 4"
+                                             Text="{Binding EndY, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0"
+                                               Classes="va-center ha-left mr-2"
+                                               Text="OZ:" />
+                                    <TextBox Grid.Row="3" Grid.Column="1"
+                                             Classes="va-center ha-stretch"
+                                             Margin="0 0 4 4"
+                                             Text="{Binding StartZ, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
+                                    <TextBox Grid.Row="3" Grid.Column="2"
+                                             Classes="va-center ha-stretch"
+                                             Margin="2 0 0 4"
+                                             Text="{Binding EndZ, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
+
+                                    <Separator Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Classes="my-2" />
+
+                                    <Grid Row="5"
+                                          Column="0"
+                                          ColumnSpan="3"
+                                          ColumnDefinitions="Auto *">
+                                        <TextBlock Grid.Column="0"
+                                                   Classes="ha-left va-center mr-2"
+                                                   Text="Плотность" />
+                                        <TextBox Grid.Column="1"
+                                                 Text="{Binding Density}" />
                                     </Grid>
                                 </Grid>
                             </Grid>

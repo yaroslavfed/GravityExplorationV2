@@ -34,18 +34,13 @@ print("Domain:", domain)
 
 # Отрисовка объектов
 for stratum in strata:
-    x = stratum["CenterX"]
-    y = stratum["CenterY"]
-    step_x = stratum["StepX"]
-    step_y = stratum["StepY"]
+    x_min = stratum["StartX"]
+    y_min = stratum["StartY"]
+    x_max = stratum["EndX"]
+    y_max = stratum["EndY"]
     is_active = stratum["IsActive"]
 
     alpha = 1.0 if is_active else 0.5
-
-    x_min = x - step_x
-    y_min = y - step_y
-    x_max = x + step_x
-    y_max = y + step_y
 
     # Обрезаем прямоугольник по границам области
     x_min = max(x_min, domain["StartX"])
@@ -57,14 +52,14 @@ for stratum in strata:
     height = y_max - y_min
 
     print(
-        f"Stratum: Center=({x},{y}), StepX={step_x}, StepY={step_y}, Clipped Rect=({x_min}, {y_min}, {width}, {height}), Active={is_active}")
+        f"Stratum: Start=({x_min},{y_min}), End=({x_max},{y_max}), Width={width}, Height={height}, Active={is_active}")
 
     # Рисуем обрезанный прямоугольник
     obj_rect = plt.Rectangle((x_min, y_min), width, height, linewidth=1.5, edgecolor='blue', facecolor='lightblue',
                              alpha=alpha)
     ax.add_patch(obj_rect)
 
-    ax.text(x, y, f"{stratum['Density']:.1f}", fontsize=8, ha='center', va='center', color='black')
+    ax.text((x_min + x_max) / 2, (y_min + y_max) / 2, f"{stratum['Density']:.1f}", fontsize=8, ha='center', va='center', color='black')
 
 ax.set_xlim(domain["StartX"], domain["EndX"])
 ax.set_ylim(domain["StartY"], domain["EndY"])

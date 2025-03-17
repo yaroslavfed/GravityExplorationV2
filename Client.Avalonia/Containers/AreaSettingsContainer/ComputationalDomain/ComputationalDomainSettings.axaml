@@ -10,7 +10,7 @@
         <!-- ReSharper disable once Xaml.ConstructorWarning -->
         <computationalDomain:ComputationalDomainSettingsViewModel />
     </Design.DataContext>
-    
+
     <Grid RowDefinitions="Auto *" Classes="m-2">
         <Button Grid.Row="0"
                 Classes="va-stretch ha-stretch hca-center"
@@ -28,26 +28,26 @@
                 <TextBlock Grid.Row="1" Grid.Column="0" Classes="va-center" Text="OX:" />
                 <TextBox Grid.Row="1" Grid.Column="1"
                          Classes="ha-stretch m-2"
-                         Text="{Binding ComputationalDomain.StartX}" />
+                         Text="{Binding ComputationalDomain.StartX, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
                 <TextBox Grid.Row="1" Grid.Column="2"
                          Classes="ha-stretch m-2"
-                         Text="{Binding ComputationalDomain.EndX}" />
+                         Text="{Binding ComputationalDomain.EndX, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Classes="va-center" Text="OY:" />
                 <TextBox Grid.Row="2" Grid.Column="1"
                          Classes="ha-stretch m-2"
-                         Text="{Binding ComputationalDomain.StartY}" />
+                         Text="{Binding ComputationalDomain.StartY, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
                 <TextBox Grid.Row="2" Grid.Column="2"
                          Classes="ha-stretch m-2"
-                         Text="{Binding ComputationalDomain.EndY}" />
+                         Text="{Binding ComputationalDomain.EndY, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Classes="va-center" Text="OZ:" />
                 <TextBox Grid.Row="3" Grid.Column="1"
                          Classes="ha-stretch m-2"
-                         Text="{Binding ComputationalDomain.StartZ}" />
+                         Text="{Binding ComputationalDomain.StartZ, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
                 <TextBox Grid.Row="3" Grid.Column="2"
                          Classes="ha-stretch m-2"
-                         Text="{Binding ComputationalDomain.EndZ}" />
+                         Text="{Binding ComputationalDomain.EndZ, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
             </Grid>
             <Separator Grid.Row="1" />
             <Grid Grid.Row="2" RowDefinitions="* * * *" ColumnDefinitions="Auto * *" Classes="va-top m-2">
@@ -61,17 +61,17 @@
                 <TextBlock Grid.Row="1" Grid.Column="0" Classes="va-center" Text="OX:" />
                 <TextBox Grid.Row="1" Grid.Column="1"
                          Classes="ha-stretch m-2"
-                         Text="{Binding ComputationalDomain.SplitsXCount}" />
+                         Text="{Binding ComputationalDomain.SplitsXCount, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Classes="va-center" Text="OY:" />
                 <TextBox Grid.Row="2" Grid.Column="1"
                          Classes="ha-stretch m-2"
-                         Text="{Binding ComputationalDomain.SplitsYCount}" />
+                         Text="{Binding ComputationalDomain.SplitsYCount, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Classes="va-center" Text="OZ:" />
                 <TextBox Grid.Row="3" Grid.Column="1"
                          Classes="ha-stretch m-2"
-                         Text="{Binding ComputationalDomain.SplitsZCount}" />
+                         Text="{Binding ComputationalDomain.SplitsZCount, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
             </Grid>
         </Grid>
     </Grid>

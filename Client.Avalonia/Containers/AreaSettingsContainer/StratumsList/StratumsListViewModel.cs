@@ -52,9 +52,9 @@ public class StratumsListViewModel : ViewModelBase
         await _handlerService.AddAsync(new() { Id = Guid.NewGuid() });
     }
 
-    private async Task UpdateStratumAsync(Stratum Stratum)
+    private async Task UpdateStratumAsync(Stratum stratum)
     {
-        await _handlerService.UpdateAsync(Stratum);
+        await _handlerService.UpdateAsync(stratum);
     }
 
     private async Task RemoveStratumAsync(Guid id)

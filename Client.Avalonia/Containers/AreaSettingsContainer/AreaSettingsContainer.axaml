@@ -18,7 +18,7 @@
         <StyleInclude Source="/Styles/TabControlStyles.axaml" />
     </UserControl.Styles>
 
-    <card:Card MinWidth="500">
+    <card:Card MinWidth="350">
         <TabControl>
             <TabItem Header="Объекты">
                 <stratumsList:StratumsList DataContext="{Binding StratumsListViewModel}" />

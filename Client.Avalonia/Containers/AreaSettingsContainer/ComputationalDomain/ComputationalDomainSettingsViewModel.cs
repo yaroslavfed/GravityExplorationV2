@@ -42,13 +42,13 @@ public class ComputationalDomainSettingsViewModel : ViewModelBase
             .DisposeWith(disposables);
     }
 
-    public string StartCoordinateLabel { get; set; } = "Нижняя граница сетки:";
+    public string StartCoordinateLabel { get; set; } = "Нижняя граница";
 
-    public string EndCoordinateLabel { get; set; } = "Верхняя граница сетки:";
+    public string EndCoordinateLabel { get; set; } = "Верхняя граница";
 
-    public string SplittingParamsLabel { get; set; } = "Кол-во ячеек:";
+    public string SplittingParamsLabel { get; set; } = "Кол-во ячеек";
 
-    public string MultyParamsLabel { get; set; } = "Коэффициент разрядки:";
+    public string MultyParamsLabel { get; set; } = "Коэффициент разрядки";
 
     [Reactive]
     public Domain? ComputationalDomain { get; private set; }
