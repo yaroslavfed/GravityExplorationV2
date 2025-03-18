@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using Avalonia.Media.Imaging;
 using Client.Avalonia.Properties;
 using Client.Core.Data;
+using Client.Core.Enums;
 using Client.Core.Services;
 using Client.Core.Services.ComputationalDomainService;
 using Client.Core.Services.PlotService;
@@ -28,6 +29,13 @@ public class PlotsContainerViewModel : ViewModelBase
         _plotService = plotService;
         _domainService = domainService;
         _stratumService = stratumService;
+
+        Projections =
+        [
+            new("XY", EProjection.XY, true),
+            new("XZ", EProjection.XZ, false),
+            new("YZ", EProjection.YZ, false)
+        ];
     }
 
     protected override void OnActivation(CompositeDisposable disposables)
@@ -66,7 +74,15 @@ public class PlotsContainerViewModel : ViewModelBase
                 {
                     try
                     {
-                        if (args is not { Item1: { }, Item2: { } })
+                        if (args is not
+                        {
+                            Item1:
+                            {
+                            },
+                            Item2:
+                            {
+                            }
+                        })
                             return;
 
                         var outputImage = await _plotService.GenerateChartAsync(args.Item1, args.Item2);
@@ -89,4 +105,7 @@ public class PlotsContainerViewModel : ViewModelBase
 
     [Reactive]
     public Domain? Domain { get; set; }
+
+    [Reactive]
+    public IReadOnlyList<PlotProjection> Projections { get; set; }
 }

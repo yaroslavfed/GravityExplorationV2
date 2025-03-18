@@ -1,6 +1,11 @@
-﻿using System.Reactive.Disposables;
-using Client.Avalonia.Containers.AreaSettingsContainer;
-using Client.Avalonia.Containers.PlotsContainer;
+﻿using System;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Threading.Tasks;
+using Avalonia.ReactiveUI;
+using Avalonia.Threading;
+using Client.Avalonia.Pages.ForwardTaskPage;
+using Client.Avalonia.Pages.SettingsPage;
 using Client.Avalonia.Properties;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -10,18 +15,18 @@ namespace Client.Avalonia.Windows.MainWindow;
 
 public class MainWindowViewModel : ViewModelBase, IScreen
 {
-    public MainWindowViewModel(
-        AreaSettingsContainerViewModel areaSettingsContainerViewModel,
-        PlotsContainerViewModel plotsContainerViewModel
-    )
+    protected override void OnActivation(CompositeDisposable disposables)
     {
-        AreaSettingsContainerViewModel = areaSettingsContainerViewModel;
-        PlotsContainerViewModel = plotsContainerViewModel;
+        InitializeStartPage();
+        base.OnActivation(disposables);
     }
 
+    [Reactive]
     public RoutingState Router { get; set; } = new();
 
-    public AreaSettingsContainerViewModel AreaSettingsContainerViewModel { get; }
-
-    public PlotsContainerViewModel PlotsContainerViewModel { get; }
+    private void InitializeStartPage()
+    {
+        IRoutableViewModel viewModel = Locator.Current.GetService<SettingsPageViewModel>()!;
+        Dispatcher.UIThread.InvokeAsync(() => Router.Navigate.Execute(viewModel));
+    }
 }

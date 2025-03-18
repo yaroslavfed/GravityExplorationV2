@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:card="clr-namespace:Client.Avalonia.Controls.Card"
              xmlns:plotsContainer="clr-namespace:Client.Avalonia.Containers.PlotsContainer"
-             xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Client.Avalonia.Containers.PlotsContainer.PlotsContainer"
              x:DataType="plotsContainer:PlotsContainerViewModel">
@@ -14,8 +13,26 @@
     </Design.DataContext>
 
     <card:Card>
-        <Viewbox>
-            <Image Source="{Binding ChartImage}" Stretch="Uniform" />
-        </Viewbox>
+        <Grid RowDefinitions="Auto *">
+            <ItemsControl Grid.Row="0"
+                          Classes="ha-center va-center mt-2"
+                          ItemsSource="{Binding Projections}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton Content="{Binding Name}"
+                                     Classes="mx-2"
+                                     IsChecked="{Binding IsActivated}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Viewbox Grid.Row="1">
+                <Image Source="{Binding ChartImage}" Stretch="Uniform" />
+            </Viewbox>
+        </Grid>
     </card:Card>
 </UserControl>

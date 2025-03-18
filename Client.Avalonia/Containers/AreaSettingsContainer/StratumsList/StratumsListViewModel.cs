@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.ReactiveUI;
@@ -36,7 +37,16 @@ public class StratumsListViewModel : ViewModelBase
         );
 
         StratumsList = new(_stratumsList);
-        _handlerService.UpdatedData.ObserveOn(RxApp.MainThreadScheduler).Subscribe(UpdateCollection);
+    }
+
+    protected override void OnActivation(CompositeDisposable disposables)
+    {
+        base.OnActivation(disposables);
+        _handlerService
+            .UpdatedData
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(UpdateCollection)
+            .DisposeWith(disposables);
     }
 
     public ReadOnlyObservableCollection<Stratum> StratumsList { get; }
@@ -62,10 +72,19 @@ public class StratumsListViewModel : ViewModelBase
         await _handlerService.RemoveAsync(id);
     }
 
-    private void UpdateCollection(IReadOnlyList<Stratum> source)
+    private void UpdateCollection(IReadOnlyList<Stratum>? source)
     {
-        foreach (var oldItem in _stratumsList.ToList())
-            _stratumsList.Remove(oldItem);
+        if (source == null)
+            return;
+
+        var stratumsList = _stratumsList.ToList();
+
+        foreach (var oldItem in stratumsList)
+        {
+            if (stratumsList.Contains(oldItem))
+                _stratumsList.Remove(oldItem);
+        }
+
 
         foreach (var newItem in source)
             _stratumsList.Add(newItem);

@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:settingsPage="clr-namespace:Client.Avalonia.Pages.SettingsPage"
+             xmlns:plotsContainer="clr-namespace:Client.Avalonia.Containers.PlotsContainer"
+             xmlns:areaSettingsContainer="clr-namespace:Client.Avalonia.Containers.AreaSettingsContainer"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Client.Avalonia.Pages.SettingsPage.SettingsPage"
+             x:DataType="settingsPage:SettingsPageViewModel">
+
+    <Design.DataContext>
+        <!-- ReSharper disable once Xaml.ConstructorWarning -->
+        <settingsPage:SettingsPageViewModel />
+    </Design.DataContext>
+
+    <Grid Classes="ha-stretch" ColumnDefinitions="Auto *" RowDefinitions="* Auto">
+        <areaSettingsContainer:AreaSettingsContainer Grid.Row="0" Grid.Column="0"
+                                                     Margin="8 8 4 8"
+                                                     DataContext="{Binding AreaSettingsContainerViewModel}" />
+        <plotsContainer:PlotsContainer Grid.Row="0" Grid.Column="1"
+                                       Margin="4 8 8 8"
+                                       DataContext="{Binding PlotsContainerViewModel}" />
+        <Button Grid.Row="1" Grid.Column="1"
+                Margin="8 0 8 0"
+                Classes="ha-stretch va-center hca-center"
+                Content="Перейти к решению прямой задачи"
+                Command="{Binding GotoForwardTaskPageCommand}" />
+    </Grid>
+</UserControl>

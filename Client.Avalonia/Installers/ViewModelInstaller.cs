@@ -3,6 +3,8 @@ using Client.Avalonia.Containers.AreaSettingsContainer;
 using Client.Avalonia.Containers.AreaSettingsContainer.ComputationalDomain;
 using Client.Avalonia.Containers.AreaSettingsContainer.StratumsList;
 using Client.Avalonia.Containers.PlotsContainer;
+using Client.Avalonia.Pages.ForwardTaskPage;
+using Client.Avalonia.Pages.SettingsPage;
 using Client.Avalonia.Windows.MainWindow;
 using ReactiveUI;
 
@@ -17,5 +19,7 @@ static internal class ViewModelInstaller
         builder.RegisterType<StratumsListViewModel>();
         builder.RegisterType<ComputationalDomainSettingsViewModel>();
         builder.RegisterType<PlotsContainerViewModel>();
+        builder.RegisterType<ForwardTaskPageViewModel>();
+        builder.RegisterType<SettingsPageViewModel>();
     }
 }
