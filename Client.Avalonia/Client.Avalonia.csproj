@@ -30,6 +30,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.0" />
+        <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.0" />
         <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0" />
         <PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
         <PackageReference Include="Splat" Version="15.3.1" />

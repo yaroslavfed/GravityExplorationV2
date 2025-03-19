@@ -48,8 +48,6 @@ public class ComputationalDomainSettingsViewModel : ViewModelBase
 
     public string SplittingParamsLabel { get; set; } = "Кол-во ячеек";
 
-    public string MultyParamsLabel { get; set; } = "Коэффициент разрядки";
-
     [Reactive]
     public Domain? ComputationalDomain { get; private set; }
 

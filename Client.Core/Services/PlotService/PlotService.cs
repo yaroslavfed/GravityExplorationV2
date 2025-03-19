@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
 using Client.Core.Data;
+using Client.Core.Enums;
 
 namespace Client.Core.Services.PlotService;
 
@@ -10,9 +11,20 @@ public class PlotService : IPlotService
     private const string PYTHON_PATH  = "python";
     private const string OUTPUT_IMAGE = "chart.png";
 
-    public Task<string> GenerateChartAsync(Domain domain, IReadOnlyList<Stratum> strata)
+    public Task<string> GenerateChartAsync(Domain domain, IReadOnlyList<Stratum> strata, EProjection projection)
     {
-        var data = new { domain, strata };
+        var data = new
+        {
+            domain,
+            strata,
+            projection = projection switch
+            {
+                EProjection.XY => "XY",
+                EProjection.XZ => "XZ",
+                EProjection.YZ => "YZ",
+                _              => throw new ArgumentOutOfRangeException(nameof(projection), "Неизвестная проекция")
+            }
+        };
         File.WriteAllText(JSON_FILE, JsonSerializer.Serialize(data));
 
         var currentDirectory = Directory.GetCurrentDirectory();

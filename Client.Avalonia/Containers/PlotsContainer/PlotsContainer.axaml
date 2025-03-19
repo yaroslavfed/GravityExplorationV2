@@ -4,6 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:card="clr-namespace:Client.Avalonia.Controls.Card"
              xmlns:plotsContainer="clr-namespace:Client.Avalonia.Containers.PlotsContainer"
+             xmlns:converters="clr-namespace:Client.Avalonia.Converters"
+             xmlns:avaloniaProgressRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Client.Avalonia.Containers.PlotsContainer.PlotsContainer"
              x:DataType="plotsContainer:PlotsContainerViewModel">
@@ -12,26 +14,33 @@
         <plotsContainer:PlotsContainerViewModel />
     </Design.DataContext>
 
+    <UserControl.Resources>
+        <converters:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+        <converters:InvertBooleanConverter x:Key="InvertBooleanConverter" />
+    </UserControl.Resources>
+
     <card:Card>
         <Grid RowDefinitions="Auto *">
-            <ItemsControl Grid.Row="0"
-                          Classes="ha-center va-center mt-2"
-                          ItemsSource="{Binding Projections}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <RadioButton Content="{Binding Name}"
-                                     Classes="mx-2"
-                                     IsChecked="{Binding IsActivated}" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Classes="ha-center va-center mt-2">
+                <RadioButton Content="XY"
+                             Classes="mx-2"
+                             IsChecked="{Binding SelectedProjection, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=XY}" />
+                <RadioButton Content="XZ"
+                             Classes="mx-2"
+                             IsChecked="{Binding SelectedProjection, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=XZ}" />
+                <RadioButton Content="YZ"
+                             Classes="mx-2"
+                             IsChecked="{Binding SelectedProjection, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=YZ}" />
+            </StackPanel>
             <Viewbox Grid.Row="1">
-                <Image Source="{Binding ChartImage}" Stretch="Uniform" />
+                <Grid>
+                    <ProgressBar Classes="va-bottom" 
+                                 IsIndeterminate="True"
+                                 IsVisible="{Binding IsLoading}" />
+                    <Image Stretch="Uniform"
+                           Source="{Binding ChartImage}"
+                           IsVisible="{Binding IsLoading, Converter={StaticResource InvertBooleanConverter}}" />
+                </Grid>
             </Viewbox>
         </Grid>
     </card:Card>

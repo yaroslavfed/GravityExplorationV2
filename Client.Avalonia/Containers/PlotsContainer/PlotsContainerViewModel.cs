@@ -30,12 +30,7 @@ public class PlotsContainerViewModel : ViewModelBase
         _domainService = domainService;
         _stratumService = stratumService;
 
-        Projections =
-        [
-            new("XY", EProjection.XY, true),
-            new("XZ", EProjection.XZ, false),
-            new("YZ", EProjection.YZ, false)
-        ];
+        SelectedProjection = EProjection.XY;
     }
 
     protected override void OnActivation(CompositeDisposable disposables)
@@ -67,11 +62,12 @@ public class PlotsContainerViewModel : ViewModelBase
             .DisposeWith(disposables);
 
         this
-            .WhenAnyValue(vm => vm.Domain, vm => vm.Stratums)
+            .WhenAnyValue(vm => vm.Domain, vm => vm.Stratums, vm => vm.SelectedProjection)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(
                 async void (args) =>
                 {
+                    IsLoading = true;
                     try
                     {
                         if (args is not
@@ -85,12 +81,14 @@ public class PlotsContainerViewModel : ViewModelBase
                         })
                             return;
 
-                        var outputImage = await _plotService.GenerateChartAsync(args.Item1, args.Item2);
+                        var outputImage = await _plotService.GenerateChartAsync(args.Item1, args.Item2, args.Item3);
                         ChartImage = new(outputImage);
-                    } catch (Exception e)
+                    } catch (Exception ex)
                     {
-                        // ReSharper disable once AsyncVoidMethod
-                        throw new(e.Message);
+                        Console.WriteLine($"Ошибка: {ex.Message}");
+                    } finally
+                    {
+                        IsLoading = false;
                     }
                 }
             )
@@ -107,5 +105,8 @@ public class PlotsContainerViewModel : ViewModelBase
     public Domain? Domain { get; set; }
 
     [Reactive]
-    public IReadOnlyList<PlotProjection> Projections { get; set; }
+    public EProjection SelectedProjection { get; set; }
+
+    [Reactive]
+    public bool IsLoading { get; set; }
 }
