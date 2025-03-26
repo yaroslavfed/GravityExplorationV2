@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <TargetFrameworks>net9.0;net8.0</TargetFrameworks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ReverseProblem.BornApproximation\ReverseProblem.BornApproximation.csproj" />
+      <ProjectReference Include="..\ReverseProblem.GaussNewton\ReverseProblem.GaussNewton.csproj" />
+    </ItemGroup>
+
+</Project>

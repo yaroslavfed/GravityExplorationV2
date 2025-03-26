@@ -16,7 +16,7 @@
                 Classes="va-stretch ha-stretch hca-center"
                 Content="Сохранить сетку"
                 Command="{Binding SaveDomainCommand}" />
-        <Grid Row="1" RowDefinitions="Auto Auto Auto Auto">
+        <Grid Row="1" RowDefinitions="Auto Auto Auto Auto Auto">
             <Grid Grid.Row="0" RowDefinitions="* * * *" ColumnDefinitions="Auto * *" Classes="va-top m-2">
                 <TextBlock Grid.Row="0" Grid.Column="1"
                            Classes="text-wrap text-center mb-1"
@@ -50,7 +50,7 @@
                          Text="{Binding ComputationalDomain.EndZ, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
             </Grid>
             <Separator Grid.Row="1" />
-            <Grid Grid.Row="2" RowDefinitions="* * * *" Classes="va-top m-2">
+            <Grid Grid.Row="2" RowDefinitions="* *" Classes="va-top m-2">
                 <TextBlock Grid.Row="0"
                            Classes="text-wrap text-center mb-1 ha-center"
                            Text="{Binding SplittingParamsLabel}" />
@@ -70,6 +70,15 @@
                     <TextBox Grid.Row="2" Grid.Column="1"
                              Classes="ha-stretch m-2"
                              Text="{Binding ComputationalDomain.SplitsZCount, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
+                </Grid>
+            </Grid>
+            <Separator Grid.Row="3" />
+            <Grid Grid.Row="4" Classes="va-top m-2">
+                <Grid ColumnDefinitions="Auto *">
+                    <TextBlock Grid.Column="0" Classes="va-center" Text="Плотность среды:" />
+                    <TextBox Grid.Column="1"
+                             Classes="ha-stretch m-2"
+                             Text="{Binding ComputationalDomain.DensityBase, Converter={StaticResource NumericValidationRule}, Mode=TwoWay}" />
                 </Grid>
             </Grid>
         </Grid>

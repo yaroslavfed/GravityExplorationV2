@@ -1,8 +1,6 @@
-﻿using System;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
+﻿using System.Reactive.Linq;
 
-namespace Client.Avalonia.Extensions;
+namespace Client.Core.Extensions;
 
 public static class ReactiveExtensions
 {

@@ -19,4 +19,6 @@ public record Domain
     public required double EndZ { get; init; }
 
     public required double SplitsZCount { get; init; }
+
+    public double DensityBase { get; init; } = 0;
 }

@@ -20,4 +20,9 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\DirectTask.Core\DirectTask.Core.csproj" />
+      <ProjectReference Include="..\ReverseProblem.Core\ReverseProblem.Core.csproj" />
+    </ItemGroup>
+
 </Project>
