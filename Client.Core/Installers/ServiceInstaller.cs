@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Client.Core.Services.ComputationalDomainService;
+using Client.Core.Services.MeshService;
 using Client.Core.Services.PlotService;
 using Client.Core.Services.SensorsService;
 using Client.Core.Services.StratumService;
@@ -13,7 +14,7 @@ public static class ServiceInstaller
         builder.RegisterType<StratumService>().As<IStratumService>();
         builder.RegisterType<ComputationalDomainService>().As<IComputationalDomainService>();
         builder.RegisterType<SensorsService>().As<ISensorsService>();
-
+        builder.RegisterType<MeshService>().As<IMeshService>();
         builder.RegisterType<PlotService>().As<IPlotService>();
     }
 }
