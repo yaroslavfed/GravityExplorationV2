@@ -5,7 +5,7 @@ using Client.Core.Enums;
 
 namespace Client.Core.Services.PlotService;
 
-public class PlotService : IPlotService
+internal class PlotService : IPlotService
 {
     private const string JSON_FILE    = "data.json";
     private const string PYTHON_PATH  = "python";

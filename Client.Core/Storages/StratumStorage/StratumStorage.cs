@@ -2,13 +2,13 @@
 using System.Reactive.Subjects;
 using Client.Core.Data;
 
-namespace Client.Core.Services.StratumHandlerService;
+namespace Client.Core.Storages.StratumStorage;
 
-public class StratumHandlerService : IHandlerService<Stratum>
+internal class StratumStorage : IStratumStorage
 {
     private readonly BehaviorSubject<List<Stratum>> _data = new([]);
 
-    public IObservable<IReadOnlyList<Stratum>> UpdatedData => _data.AsObservable();
+    public IObservable<IReadOnlyList<Stratum>> StratumList => _data.AsObservable();
 
     public Task AddAsync(Stratum data)
     {

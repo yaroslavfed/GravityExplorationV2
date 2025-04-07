@@ -3,7 +3,7 @@ using Client.Core.Data;
 
 namespace Client.Core.Storages.ComputationalDomainStorage;
 
-public class ComputationalDomainStorage : IComputationalDomainStorage
+internal class ComputationalDomainStorage : IComputationalDomainStorage
 {
     private readonly BehaviorSubject<Domain> _domain;
 

@@ -8,9 +8,11 @@ internal class Bootstrapper : BootstrapperBase<Bootstrapper>
 {
     protected override void RegisterServices(ContainerBuilder builder)
     {
-        builder.RegisterServices();
         builder.RegisterAutoMapperConfiguration();
         builder.RegisterAutoMapper();
+
+        builder.RegisterServices();
+        builder.RegisterStorages();
     }
 
     protected override void RegisterViewModels(ContainerBuilder builder)

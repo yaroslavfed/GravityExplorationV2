@@ -3,7 +3,7 @@ using Client.Core.Services;
 
 namespace Client.Core.Storages.ComputationalDomainStorage;
 
-public interface IComputationalDomainStorage : IEditable<Domain>
+internal interface IComputationalDomainStorage : IEditable<Domain>
 {
     public IObservable<Domain> Domain { get; }
 }

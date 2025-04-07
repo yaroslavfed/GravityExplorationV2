@@ -37,7 +37,7 @@ public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
         try
         {
             base.OnActivation(disposables);
-            SensorsList = await _sensorsService.GetAllAsync();
+            SensorsList = [];
         } catch (Exception e)
         {
             // ReSharper disable once AsyncVoidMethod

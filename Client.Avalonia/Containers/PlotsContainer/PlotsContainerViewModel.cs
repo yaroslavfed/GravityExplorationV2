@@ -6,9 +6,9 @@ using Avalonia.Media.Imaging;
 using Client.Avalonia.Properties;
 using Client.Core.Data;
 using Client.Core.Enums;
-using Client.Core.Services;
 using Client.Core.Services.ComputationalDomainService;
 using Client.Core.Services.PlotService;
+using Client.Core.Services.StratumService;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -18,12 +18,12 @@ public class PlotsContainerViewModel : ViewModelBase
 {
     private readonly IPlotService                _plotService;
     private readonly IComputationalDomainService _domainService;
-    private readonly IHandlerService<Stratum>    _stratumService;
+    private readonly IStratumService             _stratumService;
 
     public PlotsContainerViewModel(
         IPlotService plotService,
         IComputationalDomainService domainService,
-        IHandlerService<Stratum> stratumService
+        IStratumService stratumService
     )
     {
         _plotService = plotService;
@@ -50,7 +50,7 @@ public class PlotsContainerViewModel : ViewModelBase
             .DisposeWith(disposables);
 
         _stratumService
-            .UpdatedData
+            .StratumsList
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(
                 list =>
@@ -79,6 +79,12 @@ public class PlotsContainerViewModel : ViewModelBase
                             {
                             }
                         })
+                            return;
+
+                        if (args.Item1 == null)
+                            return;
+
+                        if (args.Item2 == null)
                             return;
 
                         var outputImage = await _plotService.GenerateChartAsync(args.Item1, args.Item2, args.Item3);

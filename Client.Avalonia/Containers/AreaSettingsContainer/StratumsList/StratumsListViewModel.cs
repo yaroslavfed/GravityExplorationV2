@@ -10,18 +10,19 @@ using Avalonia.ReactiveUI;
 using Client.Avalonia.Properties;
 using Client.Core.Data;
 using Client.Core.Services;
+using Client.Core.Services.StratumService;
 using ReactiveUI;
 
 namespace Client.Avalonia.Containers.AreaSettingsContainer.StratumsList;
 
 public class StratumsListViewModel : ViewModelBase
 {
-    private readonly IHandlerService<Stratum>      _handlerService;
+    private readonly IStratumService               _stratumService;
     private readonly ObservableCollection<Stratum> _stratumsList = [];
 
-    public StratumsListViewModel(IHandlerService<Stratum> handlerService)
+    public StratumsListViewModel(IStratumService stratumService)
     {
-        _handlerService = handlerService;
+        _stratumService = stratumService;
 
         CreateStratumCommand = ReactiveCommand.CreateFromTask(
             CreateStratumAsync,
@@ -42,8 +43,8 @@ public class StratumsListViewModel : ViewModelBase
     protected override void OnActivation(CompositeDisposable disposables)
     {
         base.OnActivation(disposables);
-        _handlerService
-            .UpdatedData
+        _stratumService
+            .StratumsList
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(UpdateCollection)
             .DisposeWith(disposables);
@@ -59,17 +60,17 @@ public class StratumsListViewModel : ViewModelBase
 
     private async Task CreateStratumAsync()
     {
-        await _handlerService.AddAsync(new() { Id = Guid.NewGuid() });
+        await _stratumService.AddAsync(new() { Id = Guid.NewGuid() });
     }
 
     private async Task UpdateStratumAsync(Stratum stratum)
     {
-        await _handlerService.UpdateAsync(stratum);
+        await _stratumService.UpdateAsync(stratum);
     }
 
     private async Task RemoveStratumAsync(Guid id)
     {
-        await _handlerService.RemoveAsync(id);
+        await _stratumService.RemoveAsync(id);
     }
 
     private void UpdateCollection(IReadOnlyList<Stratum>? source)

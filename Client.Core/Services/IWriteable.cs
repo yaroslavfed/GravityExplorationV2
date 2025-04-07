@@ -4,5 +4,5 @@ public interface IWriteable<in TData>
 {
     Task AddAsync(TData data);
 
-    Task RemoveAsync(Guid data);
+    Task RemoveAsync(Guid id);
 }
