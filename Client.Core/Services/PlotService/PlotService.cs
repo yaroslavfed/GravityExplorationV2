@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Client.Core.Data;
 using Client.Core.Enums;
+using Client.Core.Services.MeshService;
 
 namespace Client.Core.Services.PlotService;
 
@@ -11,7 +12,14 @@ internal class PlotService : IPlotService
     private const string PYTHON_PATH  = "python";
     private const string OUTPUT_IMAGE = "chart.png";
 
-    public Task<string> GenerateChartAsync(
+    private readonly IMeshService _meshService;
+
+    public PlotService(IMeshService meshService)
+    {
+        _meshService = meshService;
+    }
+
+    public async Task<string> GenerateChartAsync(
         Domain domain,
         IReadOnlyList<Stratum> strata,
         SensorsGrid sensorsGrid,
@@ -19,10 +27,10 @@ internal class PlotService : IPlotService
         EProjection projection
     )
     {
+        var mesh = await _meshService.GetMeshAsync();
         var data = new
         {
-            domain,
-            strata,
+            mesh,
             sensorsGrid,
             selectedProjection,
             projection = projection switch
@@ -33,7 +41,7 @@ internal class PlotService : IPlotService
                 _              => throw new ArgumentOutOfRangeException(nameof(projection), "Неизвестная проекция")
             }
         };
-        File.WriteAllText(JSON_FILE, JsonSerializer.Serialize(data));
+        await File.WriteAllTextAsync(JSON_FILE, JsonSerializer.Serialize(data));
 
         var currentDirectory = Directory.GetCurrentDirectory();
         var scriptPath = Path.Combine(currentDirectory, "Scripts\\chart.py");
@@ -49,9 +57,9 @@ internal class PlotService : IPlotService
         };
 
         var process = Process.Start(psi);
-        var output = process?.StandardOutput.ReadToEnd();
-        var error = process?.StandardError.ReadToEnd();
-        process?.WaitForExit();
+        var output = await process?.StandardOutput.ReadToEndAsync()!;
+        var error = await process.StandardError.ReadToEndAsync()!;
+        await process.WaitForExitAsync()!;
 
         Console.WriteLine($"Python output: {output}");
         Console.WriteLine($"Python error: {error}");
@@ -59,6 +67,6 @@ internal class PlotService : IPlotService
         if (!File.Exists(OUTPUT_IMAGE))
             throw new($"{OUTPUT_IMAGE} not found");
 
-        return Task.FromResult(OUTPUT_IMAGE);
+        return OUTPUT_IMAGE;
     }
 }
