@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -7,21 +7,22 @@ using System.Threading.Tasks;
 using Avalonia.ReactiveUI;
 using Client.Avalonia.Properties;
 using Client.Core.Data;
-using Client.Core.Services.ComputationalDomainService;
+using Client.Core.Services.SensorsService;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace Client.Avalonia.Containers.AreaSettingsContainer.ComputationalDomain;
+namespace Client.Avalonia.Containers.AreaSettingsContainer.SensorsList;
 
-public class ComputationalDomainSettingsViewModel : ViewModelBase
+public class SensorsListViewModel : ViewModelBase
 {
-    private readonly IComputationalDomainService _domainService;
+    private readonly ISensorsService _sensorsService;
 
-    public ComputationalDomainSettingsViewModel(IComputationalDomainService domainService)
+    public SensorsListViewModel(ISensorsService sensorsService)
     {
-        _domainService = domainService;
-        SaveDomainCommand = ReactiveCommand.CreateFromTask(
-            SaveComputationalDomainAsync,
+        _sensorsService = sensorsService;
+
+        SaveSensorsGridCommand = ReactiveCommand.CreateFromTask(
+            SaveSensorsGridAsync,
             outputScheduler: AvaloniaScheduler.Instance
         );
     }
@@ -29,14 +30,14 @@ public class ComputationalDomainSettingsViewModel : ViewModelBase
     protected override void OnActivation(CompositeDisposable disposables)
     {
         base.OnActivation(disposables);
-        _domainService
-            .Domain
+        _sensorsService
+            .SensorsGrid
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(
-                domain =>
+                sensors =>
                 {
-                    ComputationalDomain = domain;
-                    Debug.WriteLine(domain);
+                    SensorsGrid = sensors;
+                    Debug.WriteLine(sensors);
                 }
             )
             .DisposeWith(disposables);
@@ -49,13 +50,13 @@ public class ComputationalDomainSettingsViewModel : ViewModelBase
     public string SplittingParamsLabel { get; set; } = "Кол-во ячеек";
 
     [Reactive]
-    public Domain? ComputationalDomain { get; private set; }
+    public SensorsGrid? SensorsGrid { get; private set; }
 
-    public ReactiveCommand<Unit, Unit> SaveDomainCommand { get; }
+    public ReactiveCommand<Unit, Unit> SaveSensorsGridCommand { get; }
 
-    private Task SaveComputationalDomainAsync()
+    private Task SaveSensorsGridAsync()
     {
-        _domainService.UpdateAsync(ComputationalDomain!);
+        _sensorsService.UpdateAsync(SensorsGrid!);
         return Task.CompletedTask;
     }
 }

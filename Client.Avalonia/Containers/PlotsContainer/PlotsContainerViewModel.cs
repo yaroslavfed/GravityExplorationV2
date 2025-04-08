@@ -8,6 +8,7 @@ using Client.Core.Data;
 using Client.Core.Enums;
 using Client.Core.Services.ComputationalDomainService;
 using Client.Core.Services.PlotService;
+using Client.Core.Services.SensorsService;
 using Client.Core.Services.StratumService;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -19,18 +20,22 @@ public class PlotsContainerViewModel : ViewModelBase
     private readonly IPlotService                _plotService;
     private readonly IComputationalDomainService _domainService;
     private readonly IStratumService             _stratumService;
+    private readonly ISensorsService             _sensorsService;
 
     public PlotsContainerViewModel(
         IPlotService plotService,
         IComputationalDomainService domainService,
-        IStratumService stratumService
+        IStratumService stratumService,
+        ISensorsService sensorsService
     )
     {
         _plotService = plotService;
         _domainService = domainService;
         _stratumService = stratumService;
+        _sensorsService = sensorsService;
 
         SelectedProjection = EProjection.XY;
+        IsSensorsGridTurnedOn = false;
     }
 
     protected override void OnActivation(CompositeDisposable disposables)
@@ -61,8 +66,24 @@ public class PlotsContainerViewModel : ViewModelBase
             )
             .DisposeWith(disposables);
 
+        _sensorsService
+            .SensorsGrid
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(
+                sensorsGrid =>
+                {
+                    SensorsGrid = null;
+                    SensorsGrid = sensorsGrid;
+                }
+            )
+            .DisposeWith(disposables);
+
         this
-            .WhenAnyValue(vm => vm.Domain, vm => vm.Stratums, vm => vm.SelectedProjection)
+            .WhenAnyValue(vm => vm.Domain,
+                          vm => vm.Stratums,
+                          vm => vm.SensorsGrid,
+                          vm => vm.IsSensorsGridTurnedOn,
+                          vm => vm.SelectedProjection)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(
                 async void (args) =>
@@ -70,15 +91,7 @@ public class PlotsContainerViewModel : ViewModelBase
                     IsLoading = true;
                     try
                     {
-                        if (args is not
-                        {
-                            Item1:
-                            {
-                            },
-                            Item2:
-                            {
-                            }
-                        })
+                        if (args is not { Item1: { }, Item2: { }, Item3: { } })
                             return;
 
                         if (args.Item1 == null)
@@ -86,8 +99,17 @@ public class PlotsContainerViewModel : ViewModelBase
 
                         if (args.Item2 == null)
                             return;
+                        
+                        if (args.Item3 == null)
+                            return;
 
-                        var outputImage = await _plotService.GenerateChartAsync(args.Item1, args.Item2, args.Item3);
+                        var outputImage = await _plotService.GenerateChartAsync(
+                            args.Item1,
+                            args.Item2, 
+                            args.Item3,
+                            args.Item4, 
+                            args.Item5
+                        );
                         ChartImage = new(outputImage);
                     } catch (Exception ex)
                     {
@@ -109,6 +131,12 @@ public class PlotsContainerViewModel : ViewModelBase
 
     [Reactive]
     public Domain? Domain { get; set; }
+
+    [Reactive]
+    public SensorsGrid? SensorsGrid { get; set; }
+
+    [Reactive]
+    public bool IsSensorsGridTurnedOn { get; set; }
 
     [Reactive]
     public EProjection SelectedProjection { get; set; }

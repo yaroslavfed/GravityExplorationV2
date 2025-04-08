@@ -6,10 +6,11 @@
 
     <Application.Styles>
         <StyleInclude Source="/Styles/CommonStyles.axaml" />
+        <StyleInclude Source="/Styles/Icons.axaml" />
     </Application.Styles>
 
     <Application.Resources>
-        <converters:NumericValidationRule x:Key="NumericValidationRule"/>
+        <converters:NumericValidationRule x:Key="NumericValidationRule" />
     </Application.Resources>
 
     <Application.Styles>

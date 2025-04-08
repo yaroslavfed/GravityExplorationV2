@@ -1,9 +1,12 @@
+using Client.Core.Data;
 using Client.Core.Services;
 using Common.Data;
 
 namespace Client.Core.Storages.SensorsStorage;
 
-internal interface ISensorsStorage : IEditable<IReadOnlyList<Sensor>>
+internal interface ISensorsStorage : IEditable<SensorsGrid>
 {
-    IObservable<IReadOnlyList<Sensor>> SensorsList { get; }
+    IObservable<SensorsGrid> SensorsList { get; }
+
+    Task<IReadOnlyList<Sensor>> GetSensorsAsync();
 }

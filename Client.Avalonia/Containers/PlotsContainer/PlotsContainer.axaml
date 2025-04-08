@@ -18,9 +18,13 @@
         <converters:InvertBooleanConverter x:Key="InvertBooleanConverter" />
     </UserControl.Resources>
 
+    <UserControl.Styles>
+        <StyleInclude Source="PlotContainerStyles.axaml" />
+    </UserControl.Styles>
+
     <card:Card>
         <Grid RowDefinitions="Auto *">
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Classes="ha-center va-center mt-2">
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Classes="ha-center va-center my-2">
                 <RadioButton Content="XY"
                              Classes="mx-2"
                              IsChecked="{Binding SelectedProjection, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=XY}" />
@@ -31,16 +35,38 @@
                              Classes="mx-2"
                              IsChecked="{Binding SelectedProjection, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=YZ}" />
             </StackPanel>
-            <Viewbox Grid.Row="1">
-                <Grid>
-                    <ProgressBar Classes="va-bottom" 
-                                 IsIndeterminate="True"
-                                 IsVisible="{Binding IsLoading}" />
-                    <Image Stretch="Uniform"
-                           Source="{Binding ChartImage}"
-                           IsVisible="{Binding IsLoading, Converter={StaticResource InvertBooleanConverter}}" />
-                </Grid>
-            </Viewbox>
+            <StackPanel Grid.Row="0" Classes="ha-right va-center my-2"
+                        Orientation="Horizontal"
+                        Margin="0 8 12 8">
+                <TextBlock Classes="align-center ha-center va-center mr-2">Показывать приемники</TextBlock>
+                <ToggleButton IsChecked="{Binding IsSensorsGridTurnedOn}">
+                    <Panel>
+                        <PathIcon Classes="audio-on"
+                                  Data="{StaticResource SensorsOn}" />
+                        <PathIcon Classes="audio-mute"
+                                  Data="{StaticResource SensorsOff}" />
+                    </Panel>
+                </ToggleButton>
+            </StackPanel>
+            <card:Card Grid.Row="1" Margin="8 0 8 8">
+                <Viewbox>
+                    <DockPanel>
+                        <StackPanel Classes="m-3">
+                            <TextBlock Text="Загрузка.."
+                                       Classes="align-center ha-center mb-1"
+                                       FontWeight="SemiLight"
+                                       FontSize="5" />
+                            <ProgressBar DockPanel.Dock="Bottom"
+                                         Width="2"
+                                         IsIndeterminate="True"
+                                         IsVisible="{Binding IsLoading}" />
+                        </StackPanel>
+                        <Image Stretch="Uniform"
+                               Source="{Binding ChartImage}"
+                               IsVisible="{Binding IsLoading, Converter={StaticResource InvertBooleanConverter}}" />
+                    </DockPanel>
+                </Viewbox>
+            </card:Card>
         </Grid>
     </card:Card>
 </UserControl>

@@ -14,7 +14,7 @@
     <Grid RowDefinitions="Auto *" Classes="m-2">
         <Button Grid.Row="0"
                 Classes="va-stretch ha-stretch hca-center"
-                Content="Сохранить сетку"
+                Content="Сохранить сетку ячеек"
                 Command="{Binding SaveDomainCommand}" />
         <Grid Row="1" RowDefinitions="Auto Auto Auto Auto Auto">
             <Grid Grid.Row="0" RowDefinitions="* * * *" ColumnDefinitions="Auto * *" Classes="va-top m-2">

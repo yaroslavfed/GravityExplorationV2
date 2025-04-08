@@ -1,3 +1,4 @@
+using Client.Core.Data;
 using Client.Core.Storages.SensorsStorage;
 using Common.Data;
 
@@ -12,7 +13,7 @@ internal class SensorsService : ISensorsService
         _sensorsStorage = sensorsStorage;
     }
 
-    public IObservable<IReadOnlyList<Sensor>> SensorsList => _sensorsStorage.SensorsList;
+    public IObservable<SensorsGrid> SensorsGrid => _sensorsStorage.SensorsList;
 
-    public Task UpdateAsync(IReadOnlyList<Sensor> data) => _sensorsStorage.UpdateAsync(data);
+    public Task UpdateAsync(SensorsGrid data) => _sensorsStorage.UpdateAsync(data);
 }

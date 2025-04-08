@@ -6,6 +6,7 @@
              xmlns:areaSettingsContainer="clr-namespace:Client.Avalonia.Containers.AreaSettingsContainer"
              xmlns:stratumsList="clr-namespace:Client.Avalonia.Containers.AreaSettingsContainer.StratumsList"
              xmlns:computationalDomain="clr-namespace:Client.Avalonia.Containers.AreaSettingsContainer.ComputationalDomain"
+             xmlns:sensorsList="clr-namespace:Client.Avalonia.Containers.AreaSettingsContainer.SensorsList"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Client.Avalonia.Containers.AreaSettingsContainer.AreaSettingsContainer"
              x:DataType="areaSettingsContainer:AreaSettingsContainerViewModel">
@@ -23,9 +24,13 @@
             <TabItem Header="Объекты">
                 <stratumsList:StratumsList DataContext="{Binding StratumsListViewModel}" />
             </TabItem>
-            <TabItem Header="Сетка">
+            <TabItem Header="Ячейки">
                 <computationalDomain:ComputationalDomainSettings
                     DataContext="{Binding ComputationalDomainSettingsViewModel}" />
+            </TabItem>
+            <TabItem Header="Приемники">
+                <sensorsList:SensorsList
+                    DataContext="{Binding SensorsListViewModel}" />
             </TabItem>
         </TabControl>
     </card:Card>

@@ -1,8 +1,9 @@
+using Client.Core.Data;
 using Common.Data;
 
 namespace Client.Core.Services.SensorsService;
 
-public interface ISensorsService : IEditable<IReadOnlyList<Sensor>>
+public interface ISensorsService : IEditable<SensorsGrid>
 {
-    IObservable<IReadOnlyList<Sensor>> SensorsList { get; }
+    IObservable<SensorsGrid> SensorsGrid { get; }
 }

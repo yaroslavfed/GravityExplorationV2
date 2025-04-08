@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Text.Json;
 using Client.Core.Extensions;
 using Client.Core.Services.ComputationalDomainService;
 using Client.Core.Services.MeshService.OctreeStructure;
@@ -8,7 +6,7 @@ using Common.Data;
 
 namespace Client.Core.Services.MeshService;
 
-public class MeshService : IMeshService
+internal class MeshService : IMeshService
 {
     private readonly IComputationalDomainService _computationalDomainService;
     private readonly IStratumService             _stratumService;
@@ -24,21 +22,21 @@ public class MeshService : IMeshService
         var stratums = (await _stratumService.StratumsList.Value()).ToList();
         var domain = await _computationalDomainService.Domain.Value();
 
-        var pointsX = GetMergedPoints(
+        var pointsX = await GetMergedPointsAsync(
             stratums.Select(s => s.StartX),
             stratums.Select(s => s.EndX),
             domain.StartX,
             domain.EndX,
             domain.SplitsXCount
         );
-        var pointsY = GetMergedPoints(
+        var pointsY = await GetMergedPointsAsync(
             stratums.Select(s => s.StartY),
             stratums.Select(s => s.EndY),
             domain.StartY,
             domain.EndY,
             domain.SplitsYCount
         );
-        var pointsZ = GetMergedPoints(
+        var pointsZ = await GetMergedPointsAsync(
             stratums.Select(s => s.StartZ),
             stratums.Select(s => s.EndZ),
             domain.StartZ,
@@ -61,9 +59,9 @@ public class MeshService : IMeshService
 
         var cells = new List<Cell>();
 
-        for (int i = 0; i < pointsX.Count - 1; i++)
-        for (int j = 0; j < pointsY.Count - 1; j++)
-        for (int k = 0; k < pointsZ.Count - 1; k++)
+        for (var i = 0; i < pointsX.Count - 1; i++)
+        for (var j = 0; j < pointsY.Count - 1; j++)
+        for (var k = 0; k < pointsZ.Count - 1; k++)
         {
             var minX = pointsX[i];
             var maxX = pointsX[i + 1];
@@ -79,7 +77,7 @@ public class MeshService : IMeshService
             var density = octree.FindDensity(centerX, centerY, centerZ) ?? domain.DensityBase;
 
             cells.Add(
-                new Cell
+                new()
                 {
                     CenterX = centerX,
                     CenterY = centerY,
@@ -93,36 +91,10 @@ public class MeshService : IMeshService
         }
 
         var mesh = new Mesh { Cells = cells };
-
-#if false
-        const string JSON_FILE = "mesh.json";
-        const string PYTHON_PATH = "python";
-        const string OUTPUT_IMAGE = "chart.png";
-
-        await File.WriteAllTextAsync(JSON_FILE, JsonSerializer.Serialize(mesh));
-        var currentDirectory = Directory.GetCurrentDirectory();
-        var scriptPath = Path.Combine(currentDirectory, "Scripts\\mesh.py");
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = PYTHON_PATH,
-            Arguments = $"{scriptPath} {JSON_FILE} {OUTPUT_IMAGE}",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-
-        var process = Process.Start(psi);
-        var output = await process?.StandardOutput.ReadToEndAsync()!;
-        var error = await process?.StandardError.ReadToEndAsync()!;
-        await process?.WaitForExitAsync()!;
-#endif
-
         return mesh;
     }
 
-    private static List<double> GetMergedPoints(
+    private async Task<List<double>> GetMergedPointsAsync(
         IEnumerable<double> stratumStarts,
         IEnumerable<double> stratumEnds,
         double domainStart,
@@ -131,11 +103,11 @@ public class MeshService : IMeshService
     )
     {
         var stratumPoints = stratumStarts.Concat(stratumEnds);
-        var domainPoints = GetPointsByDomain(domainStart, domainEnd, divisions);
+        var domainPoints = await GetPointsByDomainAsync(domainStart, domainEnd, divisions);
         return stratumPoints.Concat(domainPoints).Distinct().OrderBy(p => p).ToList();
     }
 
-    private static List<double> GetPointsByDomain(double start, double end, double divisions)
+    private Task<List<double>> GetPointsByDomainAsync(double start, double end, double divisions)
     {
         if (divisions <= 0)
             throw new ArgumentException("Количество разбиений должно быть больше 0.");
@@ -144,7 +116,6 @@ public class MeshService : IMeshService
         var points = new List<double>();
         for (var i = 0; i <= divisions; i++)
             points.Add(start + i * step);
-        return points;
+        return Task.FromResult(points);
     }
-
 }

@@ -11,12 +11,20 @@ internal class PlotService : IPlotService
     private const string PYTHON_PATH  = "python";
     private const string OUTPUT_IMAGE = "chart.png";
 
-    public Task<string> GenerateChartAsync(Domain domain, IReadOnlyList<Stratum> strata, EProjection projection)
+    public Task<string> GenerateChartAsync(
+        Domain domain,
+        IReadOnlyList<Stratum> strata,
+        SensorsGrid sensorsGrid,
+        bool selectedProjection,
+        EProjection projection
+    )
     {
         var data = new
         {
             domain,
             strata,
+            sensorsGrid,
+            selectedProjection,
             projection = projection switch
             {
                 EProjection.XY => "XY",
