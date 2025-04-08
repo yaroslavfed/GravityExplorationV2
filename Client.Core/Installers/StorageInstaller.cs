@@ -7,7 +7,7 @@ namespace Client.Core.Installers;
 
 public static class StorageInstaller
 {
-    public static void RegisterStorages(this ContainerBuilder builder)
+    public static void RegisterClientCoreStorages(this ContainerBuilder builder)
     {
         builder.RegisterType<StratumStorage>().As<IStratumStorage>().SingleInstance();
         builder.RegisterType<ComputationalDomainStorage>().As<IComputationalDomainStorage>().SingleInstance();

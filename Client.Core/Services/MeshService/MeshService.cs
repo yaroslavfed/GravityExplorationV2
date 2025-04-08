@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Text.Json;
 using Client.Core.Extensions;
 using Client.Core.Services.ComputationalDomainService;
 using Client.Core.Services.MeshService.OctreeStructure;
@@ -15,6 +17,12 @@ internal class MeshService : IMeshService
     {
         _stratumService = stratumService;
         _computationalDomainService = computationalDomainService;
+    }
+
+    public async Task<double> GetBaseDensityAsync()
+    {
+        var domain = await _computationalDomainService.Domain.Value();
+        return domain.DensityBase;
     }
 
     public async Task<Mesh> GetMeshAsync()
@@ -75,7 +83,6 @@ internal class MeshService : IMeshService
             var centerZ = (minZ + maxZ) / 2;
 
             var density = octree.FindDensity(centerX, centerY, centerZ) ?? domain.DensityBase;
-
             cells.Add(
                 new()
                 {

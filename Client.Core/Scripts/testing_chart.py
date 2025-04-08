@@ -65,10 +65,12 @@ def plot_mesh(cells):
          max(cell["CenterZ"] + cell["BoundZ"] for cell in cells)]
     )
 
-    plt.show()
+    plt.savefig('mesh_chart.png', dpi=300, bbox_inches='tight')
+    print(f"Сохранено изображение: {'mesh_chart.png'}")
+    #plt.show()
 
 # 🚀 Запуск
 if __name__ == '__main__':
-    mesh_file = 'mesh.json'  # Путь к JSON-файлу
+    mesh_file = 'mesh_data.json'  # Путь к JSON-файлу
     cells = load_mesh(mesh_file)
     plot_mesh(cells)

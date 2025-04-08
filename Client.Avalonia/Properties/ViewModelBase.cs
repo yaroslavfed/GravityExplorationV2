@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Reactive.Disposables;
+using System.Threading.Tasks;
 using ReactiveUI;
 
 namespace Client.Avalonia.Properties;
@@ -22,8 +23,9 @@ public class ViewModelBase : ReactiveObject, IActivatableViewModel
         );
     }
 
-    protected virtual void OnActivation(CompositeDisposable disposables)
+    protected virtual Task OnActivation(CompositeDisposable disposables)
     {
+        return Task.CompletedTask;
     }
 
     protected virtual void OnDeactivation()

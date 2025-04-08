@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
@@ -7,58 +9,85 @@ using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using Client.Avalonia.Pages.SettingsPage;
 using Client.Avalonia.Properties;
-using Client.Core.Services.MeshService;
-using Client.Core.Services.SensorsService;
+using Client.Core.Services.AnomalyPlotHelper;
+using Client.Core.Services.ForwardTaskService;
 using Common.Data;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
+using Bitmap = Avalonia.Media.Imaging.Bitmap;
 
 namespace Client.Avalonia.Pages.ForwardTaskPage;
 
 public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
 {
-    private readonly ISensorsService _sensorsService;
-    private readonly IMeshService    _meshService;
+    private readonly IForwardTaskService _forwardTaskService;
+    private readonly IAnomalyPlotHelper  _anomalyPlotHelper;
 
-    public ForwardTaskPageViewModel(IScreen hostScreen, ISensorsService sensorsService, IMeshService meshService)
+    public ForwardTaskPageViewModel(
+        IScreen hostScreen,
+        IForwardTaskService forwardTaskService,
+        IAnomalyPlotHelper anomalyPlotHelper
+    )
     {
         HostScreen = hostScreen;
-        _sensorsService = sensorsService;
-        _meshService = meshService;
+        _forwardTaskService = forwardTaskService;
+        _anomalyPlotHelper = anomalyPlotHelper;
 
         GotoSettingsPageCommand = ReactiveCommand.CreateFromTask(
             OpenSettingsPage,
             outputScheduler: AvaloniaScheduler.Instance
         );
 
-        _meshService.GetMeshAsync();
+        LoadAnomaliesCommand = ReactiveCommand.CreateFromTask(
+            LoadAnomaliesAsync,
+            outputScheduler: AvaloniaScheduler.Instance
+        );
     }
 
-    protected override void OnActivation(CompositeDisposable disposables)
+    protected override async Task OnActivation(CompositeDisposable disposables)
     {
-        try
-        {
-            base.OnActivation(disposables);
-            SensorsList = [];
-        } catch (Exception e)
-        {
-            throw new("Failed to get all sensors", e);
-        }
+        await base.OnActivation(disposables);
+        LoadAnomaliesCommand.Execute().Subscribe().DisposeWith(disposables);
     }
 
     public string UrlPathSegment => "forward-task-page";
 
     public IScreen HostScreen { get; }
 
+    public ObservableCollection<Sensor> SensorsList { get; } = new();
+
     [Reactive]
-    public IReadOnlyList<Sensor> SensorsList { get; set; }
+    public Bitmap? AnomalyImage { get; set; }
 
     public ReactiveCommand<Unit, Unit> GotoSettingsPageCommand { get; }
+
+    private ReactiveCommand<Unit, Unit> LoadAnomaliesCommand { get; }
 
     private async Task OpenSettingsPage()
     {
         IRoutableViewModel viewModel = Locator.Current.GetService<SettingsPageViewModel>()!;
         await Dispatcher.UIThread.InvokeAsync(() => HostScreen.Router.Navigate.Execute(viewModel));
+    }
+
+    private async Task LoadAnomaliesAsync()
+    {
+        SensorsList.Clear();
+
+        await foreach (var sensor in _forwardTaskService.GetAnomalyMapAsync())
+        {
+            SensorsList.Add(sensor);
+
+            if (SensorsList.Count % 20 == 0)
+                await UpdateGraphAsync();
+        }
+
+        await UpdateGraphAsync();
+    }
+
+    private async Task UpdateGraphAsync()
+    {
+        var outputImage = await _anomalyPlotHelper.GenerateChartAsync(SensorsList.ToList());
+        AnomalyImage = new(outputImage);
     }
 }

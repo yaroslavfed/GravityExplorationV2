@@ -16,10 +16,10 @@ internal class SensorsStorage : ISensorsStorage
             {
                 StartX = 0,
                 EndX = 1,
-                SplitsXCount = 10,
+                SplitsXCount = 1,
                 StartY = 0,
                 EndY = 1,
-                SplitsYCount = 10
+                SplitsYCount = 1
             }
         );
     }

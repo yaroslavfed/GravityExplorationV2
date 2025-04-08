@@ -26,9 +26,9 @@ public class ComputationalDomainSettingsViewModel : ViewModelBase
         );
     }
 
-    protected override void OnActivation(CompositeDisposable disposables)
+    protected override async Task OnActivation(CompositeDisposable disposables)
     {
-        base.OnActivation(disposables);
+        await base.OnActivation(disposables);
         _domainService
             .Domain
             .ObserveOn(RxApp.MainThreadScheduler)

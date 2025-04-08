@@ -8,6 +8,5 @@ public record Sensor
 
     public double Z { get; init; }
 
-    // TODO: Убрать рандом, заменить на расчёт с прямой задачи 
-    public double Value { get; init; } = new Random().Next(0, 7) + new Random().NextDouble();
+    public double Value { get; set; }
 }

@@ -27,9 +27,9 @@ public class SensorsListViewModel : ViewModelBase
         );
     }
 
-    protected override void OnActivation(CompositeDisposable disposables)
+    protected override async Task OnActivation(CompositeDisposable disposables)
     {
-        base.OnActivation(disposables);
+        await base.OnActivation(disposables);
         _sensorsService
             .SensorsGrid
             .ObserveOn(RxApp.MainThreadScheduler)

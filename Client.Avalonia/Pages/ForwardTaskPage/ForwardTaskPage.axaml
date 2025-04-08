@@ -15,24 +15,43 @@
 
     <Grid RowDefinitions="Auto * Auto">
         <card:Card Grid.Row="0" Margin="8 8 8 2">
-            <ScrollViewer>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding SensorsList}" Classes="m-1">
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" MaxHeight="200" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <card:Card Classes="m-1">
-                                <Grid RowDefinitions="Auto *" Classes="m-2">
-                                    <StackPanel Grid.Row="0" Orientation="Horizontal" Classes="mb-1">
-                                        <TextBlock Classes="mr-1 ha-center"
-                                                   Text="{Binding X, StringFormat='OX: {0}'}" />
-                                        <TextBlock Classes="mx-1 ha-center"
-                                                   Text="{Binding Y, StringFormat='OY: {0}'}" />
-                                        <TextBlock Classes="ml-1 ha-center"
-                                                   Text="{Binding Z, StringFormat='OZ: {0}'}" />
+                                <Grid RowDefinitions="* Auto *" Classes="m-2">
+                                    <StackPanel Grid.Row="0" Orientation="Vertical">
+                                        <TextBlock Classes="ha-left"
+                                                   Text="{Binding X, StringFormat='OX: {0:0.#####}'}">
+                                            <ToolTip.Tip>
+                                                <StackPanel>
+                                                    <TextBlock Classes="align-justify"
+                                                               FontWeight="Bold"
+                                                               Text="{Binding X}" />
+                                                </StackPanel>
+                                            </ToolTip.Tip>
+                                        </TextBlock>
+                                        <TextBlock Classes="ha-left"
+                                                   Text="{Binding Y, StringFormat='OY: {0:0.#####}'}">
+                                            <ToolTip.Tip>
+                                                <StackPanel>
+                                                    <TextBlock Classes="align-justify"
+                                                               FontWeight="Bold"
+                                                               Text="{Binding Y}" />
+                                                </StackPanel>
+                                            </ToolTip.Tip>
+                                        </TextBlock>
                                     </StackPanel>
-                                    <TextBlock Grid.Row="1"
+                                    <Separator Grid.Row="1"
+                                               Classes="my-1" />
+                                    <TextBlock Grid.Row="2"
+                                               Classes="ha-left"
                                                Text="{Binding Value, StringFormat='Показание: {0:0.####}'}">
                                         <ToolTip.Tip>
                                             <StackPanel>
@@ -51,8 +70,7 @@
         </card:Card>
         <card:Card Grid.Row="1" Margin="8 2 8 4">
             <Viewbox>
-                <Image Stretch="Uniform"
-                       Source="avares://Client.Avalonia/Assets/testpng.png" />
+                <Image Source="{Binding AnomalyImage}" Stretch="Uniform" />
             </Viewbox>
         </card:Card>
         <Grid Grid.Row="2" ColumnDefinitions="Auto *" Margin="10 4 10 8">

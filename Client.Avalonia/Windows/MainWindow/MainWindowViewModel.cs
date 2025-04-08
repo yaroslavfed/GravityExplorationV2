@@ -15,10 +15,10 @@ namespace Client.Avalonia.Windows.MainWindow;
 
 public class MainWindowViewModel : ViewModelBase, IScreen
 {
-    protected override void OnActivation(CompositeDisposable disposables)
+    protected override async Task OnActivation(CompositeDisposable disposables)
     {
         InitializeStartPage();
-        base.OnActivation(disposables);
+        await base.OnActivation(disposables);
     }
 
     [Reactive]

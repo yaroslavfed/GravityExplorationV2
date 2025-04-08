@@ -15,5 +15,7 @@ internal class SensorsService : ISensorsService
 
     public IObservable<SensorsGrid> SensorsGrid => _sensorsStorage.SensorsList;
 
+    public Task<IReadOnlyList<Sensor>> GetSensorsAsync() => _sensorsStorage.GetSensorsAsync();
+
     public Task UpdateAsync(SensorsGrid data) => _sensorsStorage.UpdateAsync(data);
 }

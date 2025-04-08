@@ -6,4 +6,6 @@ namespace Client.Core.Services.SensorsService;
 public interface ISensorsService : IEditable<SensorsGrid>
 {
     IObservable<SensorsGrid> SensorsGrid { get; }
+
+    Task<IReadOnlyList<Sensor>> GetSensorsAsync();
 }

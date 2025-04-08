@@ -3,16 +3,9 @@ using Client.Core.Enums;
 
 namespace Client.Core.Services.PlotService;
 
-public interface IPlotService
+public interface IMeshPlotHelper
 {
-    // Domain
-    // Stratums
-    // SensorsGrid
-    // IsSensorsGridTurnedOn
-    // SelectedProjection
     Task<string> GenerateChartAsync(
-        Domain domain,
-        IReadOnlyList<Stratum> strata,
         SensorsGrid sensorsGrid,
         bool selectedProjection,
         EProjection projection

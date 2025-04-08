@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Client.Avalonia.Properties;
 using Client.Core.Data;
@@ -17,19 +18,19 @@ namespace Client.Avalonia.Containers.PlotsContainer;
 
 public class PlotsContainerViewModel : ViewModelBase
 {
-    private readonly IPlotService                _plotService;
+    private readonly IMeshPlotHelper                _meshPlotHelper;
     private readonly IComputationalDomainService _domainService;
     private readonly IStratumService             _stratumService;
     private readonly ISensorsService             _sensorsService;
 
     public PlotsContainerViewModel(
-        IPlotService plotService,
+        IMeshPlotHelper meshPlotHelper,
         IComputationalDomainService domainService,
         IStratumService stratumService,
         ISensorsService sensorsService
     )
     {
-        _plotService = plotService;
+        _meshPlotHelper = meshPlotHelper;
         _domainService = domainService;
         _stratumService = stratumService;
         _sensorsService = sensorsService;
@@ -38,9 +39,9 @@ public class PlotsContainerViewModel : ViewModelBase
         IsSensorsGridTurnedOn = false;
     }
 
-    protected override void OnActivation(CompositeDisposable disposables)
+    protected override async Task OnActivation(CompositeDisposable disposables)
     {
-        base.OnActivation(disposables);
+        await base.OnActivation(disposables);
 
         _domainService
             .Domain
@@ -93,19 +94,11 @@ public class PlotsContainerViewModel : ViewModelBase
                     {
                         if (args is not { Item1: { }, Item2: { }, Item3: { } })
                             return;
-
-                        if (args.Item1 == null)
-                            return;
-
-                        if (args.Item2 == null)
-                            return;
                         
                         if (args.Item3 == null)
                             return;
 
-                        var outputImage = await _plotService.GenerateChartAsync(
-                            args.Item1,
-                            args.Item2, 
+                        var outputImage = await _meshPlotHelper.GenerateChartAsync(
                             args.Item3,
                             args.Item4, 
                             args.Item5

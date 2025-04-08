@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Client.Avalonia.Installers;
 using Client.Core.Installers;
+using DirectTask.Core.Installers;
 
 namespace Client.Avalonia.Properties;
 
@@ -11,8 +12,10 @@ internal class Bootstrapper : BootstrapperBase<Bootstrapper>
         builder.RegisterAutoMapperConfiguration();
         builder.RegisterAutoMapper();
 
-        builder.RegisterServices();
-        builder.RegisterStorages();
+        builder.RegisterClientCoreServices();
+        builder.RegisterClientCoreStorages();
+
+        builder.RegisterDirectTaskCoreServices();
     }
 
     protected override void RegisterViewModels(ContainerBuilder builder)

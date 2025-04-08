@@ -40,9 +40,9 @@ public class StratumsListViewModel : ViewModelBase
         StratumsList = new(_stratumsList);
     }
 
-    protected override void OnActivation(CompositeDisposable disposables)
+    protected override async Task OnActivation(CompositeDisposable disposables)
     {
-        base.OnActivation(disposables);
+        await base.OnActivation(disposables);
         _stratumService
             .StratumsList
             .ObserveOn(RxApp.MainThreadScheduler)
