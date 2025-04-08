@@ -15,19 +15,5 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="* Auto">
-        <reactiveUi:RoutedViewHost Grid.Row="0" Router="{Binding Router}" PageTransition="{x:Null}" />
-
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="15">
-            <StackPanel.Styles>
-                <Style Selector="StackPanel > :is(Control)">
-                    <Setter Property="Margin" Value="2" />
-                </Style>
-                <Style Selector="StackPanel > TextBlock">
-                    <Setter Property="VerticalAlignment" Value="Center" />
-                </Style>
-            </StackPanel.Styles>
-        </StackPanel>
-    </Grid>
-
+    <reactiveUi:RoutedViewHost Router="{Binding Router}" PageTransition="{x:Null}" />
 </Window>

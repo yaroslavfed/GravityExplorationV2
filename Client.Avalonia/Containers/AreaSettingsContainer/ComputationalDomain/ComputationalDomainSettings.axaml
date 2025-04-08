@@ -11,7 +11,7 @@
         <computationalDomain:ComputationalDomainSettingsViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto *" Classes="m-2">
+    <Grid RowDefinitions="Auto *">
         <Button Grid.Row="0"
                 Classes="va-stretch ha-stretch hca-center"
                 Content="Сохранить сетку ячеек"

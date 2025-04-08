@@ -13,58 +13,63 @@
         <forwardTaskPage:ForwardTaskPageViewModel />
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="Auto *">
-        <Grid Column="0" RowDefinitions="Auto *" Margin="12 12 8 0" MinWidth="150">
-            <Grid Grid.Row="0" ColumnDefinitions="Auto *">
-                <Button Grid.Column="0"
-                        Classes="ha-stretch hca-center"
-                        Margin="0 0 2 4"
-                        Content="Изменить данные"
-                        Command="{Binding GotoSettingsPageCommand}" />
-                <Button Grid.Column="1"
-                        Classes="ha-stretch hca-center"
-                        Margin="2 0 0 4"
-                        Content="Перейти к обратной задаче" />
-            </Grid>
-            <card:Card Grid.Row="1">
-                <ScrollViewer>
-                    <ItemsControl ItemsSource="{Binding SensorsList}" Classes="m-1">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <card:Card Classes="m-1">
-                                    <Grid RowDefinitions="Auto *" Classes="m-2">
-                                        <StackPanel Grid.Row="0" Orientation="Horizontal" Classes="mb-1">
-                                            <TextBlock Classes="mr-1 ha-center"
-                                                       Text="{Binding X, StringFormat='OX: {0}'}" />
-                                            <TextBlock Classes="mx-1 ha-center"
-                                                       Text="{Binding Y, StringFormat='OY: {0}'}" />
-                                            <TextBlock Classes="ml-1 ha-center"
-                                                       Text="{Binding Z, StringFormat='OZ: {0}'}" />
-                                        </StackPanel>
-                                        <TextBlock Grid.Row="1"
-                                                   Text="{Binding Value, StringFormat='Показание: {0:0.####}'}">
-                                            <ToolTip.Tip>
-                                                <StackPanel>
-                                                    <TextBlock Classes="align-justify"
-                                                               FontWeight="Bold"
-                                                               Text="{Binding Value}" />
-                                                </StackPanel>
-                                            </ToolTip.Tip>
-                                        </TextBlock>
-                                    </Grid>
-                                </card:Card>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </card:Card>
-        </Grid>
-        <card:Card Grid.Column="1" Margin="4 8 8 0">
+    <Grid RowDefinitions="Auto * Auto">
+        <card:Card Grid.Row="0" Margin="8 8 8 2">
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding SensorsList}" Classes="m-1">
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <card:Card Classes="m-1">
+                                <Grid RowDefinitions="Auto *" Classes="m-2">
+                                    <StackPanel Grid.Row="0" Orientation="Horizontal" Classes="mb-1">
+                                        <TextBlock Classes="mr-1 ha-center"
+                                                   Text="{Binding X, StringFormat='OX: {0}'}" />
+                                        <TextBlock Classes="mx-1 ha-center"
+                                                   Text="{Binding Y, StringFormat='OY: {0}'}" />
+                                        <TextBlock Classes="ml-1 ha-center"
+                                                   Text="{Binding Z, StringFormat='OZ: {0}'}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Row="1"
+                                               Text="{Binding Value, StringFormat='Показание: {0:0.####}'}">
+                                        <ToolTip.Tip>
+                                            <StackPanel>
+                                                <TextBlock Classes="align-justify"
+                                                           FontWeight="Bold"
+                                                           Text="{Binding Value}" />
+                                            </StackPanel>
+                                        </ToolTip.Tip>
+                                    </TextBlock>
+                                </Grid>
+                            </card:Card>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </card:Card>
+        <card:Card Grid.Row="1" Margin="8 2 8 4">
             <Viewbox>
                 <Image Stretch="Uniform"
                        Source="avares://Client.Avalonia/Assets/testpng.png" />
             </Viewbox>
         </card:Card>
+        <Grid Grid.Row="2" ColumnDefinitions="Auto *" Margin="10 4 10 8">
+            <Button Grid.Column="0"
+                    Classes="ha-stretch hca-center"
+                    Padding="4"
+                    Margin="0 0 2 4"
+                    Command="{Binding GotoSettingsPageCommand}">
+                <Button.Content>
+                    <PathIcon Data="{StaticResource GoBack}" />
+                </Button.Content>
+            </Button>
+            <Button Grid.Column="1"
+                    Classes="ha-stretch hca-center"
+                    Margin="2 0 0 4"
+                    Content="Перейти к обратной задаче" />
+        </Grid>
     </Grid>
 
 </UserControl>

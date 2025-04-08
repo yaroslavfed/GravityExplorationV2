@@ -20,7 +20,7 @@
     </UserControl.Styles>
 
     <card:Card MinWidth="350">
-        <TabControl>
+        <TabControl Margin="2 2 2 0">
             <TabItem Header="Объекты">
                 <stratumsList:StratumsList DataContext="{Binding StratumsListViewModel}" />
             </TabItem>
