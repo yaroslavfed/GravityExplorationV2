@@ -24,31 +24,35 @@
 
     <card:Card>
         <Grid RowDefinitions="Auto *">
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Classes="ha-center va-center my-2">
-                <RadioButton Content="XY"
-                             Classes="mx-2"
-                             IsChecked="{Binding SelectedProjection, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=XY}" />
-                <RadioButton Content="XZ"
-                             Classes="mx-2"
-                             IsChecked="{Binding SelectedProjection, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=XZ}" />
-                <RadioButton Content="YZ"
-                             Classes="mx-2"
-                             IsChecked="{Binding SelectedProjection, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=YZ}" />
-            </StackPanel>
-            <StackPanel Grid.Row="0" Classes="ha-right va-center my-2"
-                        Orientation="Horizontal"
-                        Margin="0 8 12 8">
-                <TextBlock Classes="align-center ha-center va-center mr-2">Показывать приемники</TextBlock>
-                <ToggleButton IsChecked="{Binding IsSensorsGridTurnedOn}">
-                    <Panel>
-                        <PathIcon Classes="audio-on"
-                                  Data="{StaticResource SensorsOn}" />
-                        <PathIcon Classes="audio-mute"
-                                  Data="{StaticResource SensorsOff}" />
-                    </Panel>
-                </ToggleButton>
-            </StackPanel>
-            <card:Card Grid.Row="1" Margin="8 0 8 8">
+            <card:Card Grid.Row="0" Margin="8 8 8 2">
+                <Grid>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Classes="ha-center va-center my-2">
+                        <RadioButton Content="XY"
+                                     Classes="mx-2"
+                                     IsChecked="{Binding SelectedProjection, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=XY}" />
+                        <RadioButton Content="XZ"
+                                     Classes="mx-2"
+                                     IsChecked="{Binding SelectedProjection, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=XZ}" />
+                        <RadioButton Content="YZ"
+                                     Classes="mx-2"
+                                     IsChecked="{Binding SelectedProjection, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=YZ}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Classes="ha-right va-center my-2"
+                                Orientation="Horizontal"
+                                Margin="0 8 12 8">
+                        <TextBlock Classes="align-center ha-center va-center mr-2">Показывать приемники</TextBlock>
+                        <ToggleButton IsChecked="{Binding IsSensorsGridTurnedOn}">
+                            <Panel>
+                                <PathIcon Classes="audio-on"
+                                          Data="{StaticResource SensorsOn}" />
+                                <PathIcon Classes="audio-mute"
+                                          Data="{StaticResource SensorsOff}" />
+                            </Panel>
+                        </ToggleButton>
+                    </StackPanel>
+                </Grid>
+            </card:Card>
+            <card:Card Grid.Row="1" Margin="8 2 8 8">
                 <Viewbox>
                     <DockPanel>
                         <StackPanel Classes="m-3">
