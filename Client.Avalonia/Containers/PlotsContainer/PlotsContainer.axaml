@@ -57,10 +57,10 @@
                     <DockPanel>
                         <StackPanel Classes="m-3">
                             <TextBlock Text="Загрузка.."
-                                       Classes="align-center ha-center mb-1"
+                                       Classes="align-center va-bottom ha-center mb-1"
                                        FontWeight="SemiLight"
-                                       FontSize="5" />
-                            <ProgressBar DockPanel.Dock="Bottom"
+                                       FontSize="3" />
+                            <ProgressBar Classes="va-bottom"
                                          Width="2"
                                          IsIndeterminate="True"
                                          IsVisible="{Binding IsLoading}" />

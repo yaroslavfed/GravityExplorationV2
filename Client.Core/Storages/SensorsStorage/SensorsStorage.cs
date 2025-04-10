@@ -15,10 +15,10 @@ internal class SensorsStorage : ISensorsStorage
             new()
             {
                 StartX = 0,
-                EndX = 1,
+                EndX = 0,
                 SplitsXCount = 1,
                 StartY = 0,
-                EndY = 1,
+                EndY = 0,
                 SplitsYCount = 1
             }
         );
@@ -28,8 +28,16 @@ internal class SensorsStorage : ISensorsStorage
 
     public async Task<IReadOnlyList<Sensor>> GetSensorsAsync()
     {
-        var pointsX = await GetPointsAsync(_sensors.Value.StartX, _sensors.Value.EndX, _sensors.Value.SplitsXCount);
-        var pointsY = await GetPointsAsync(_sensors.Value.StartY, _sensors.Value.EndY, _sensors.Value.SplitsYCount);
+        var pointsX = await GetPointsAsync(
+            _sensors.Value.StartX,
+            _sensors.Value.EndX,
+            (int)_sensors.Value.SplitsXCount
+        );
+        var pointsY = await GetPointsAsync(
+            _sensors.Value.StartY,
+            _sensors.Value.EndY,
+            (int)_sensors.Value.SplitsYCount
+        );
 
         var sensors = (from y in pointsY from x in pointsX select new Sensor { X = x, Y = y, Value = 0 }).ToList();
         return sensors;
@@ -41,16 +49,22 @@ internal class SensorsStorage : ISensorsStorage
         return Task.CompletedTask;
     }
 
-    private Task<List<double>> GetPointsAsync(double start, double end, double divisions)
+    private Task<List<double>> GetPointsAsync(double start, double end, int pointsCount)
     {
-        var points = new List<double>();
+        if (pointsCount < 1)
+            throw new ArgumentException("Количество точек должно быть не менее 1");
 
-        if (divisions <= 0)
-            throw new ArgumentException("Количество разбиений должно быть больше 0.");
+        var points = new List<double>(pointsCount);
 
-        var step = (end - start) / divisions;
+        if (pointsCount == 1 && Math.Abs(start - end) < 1e-16)
+        {
+            points.Add(start);
+            return Task.FromResult(points);
+        }
 
-        for (var i = 0; i <= divisions; i++)
+        var step = (end - start) / (pointsCount - 1);
+
+        for (var i = 0; i < pointsCount; i++)
             points.Add(start + i * step);
 
         return Task.FromResult(points);

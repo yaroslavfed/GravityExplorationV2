@@ -4,5 +4,5 @@ namespace Client.Core.Services.ForwardTaskService;
 
 public interface IForwardTaskService
 {
-    IAsyncEnumerable<Sensor> GetAnomalyMapAsync();
+    Task<IAsyncEnumerable<Sensor>> GetAnomalyMapAsync();
 }

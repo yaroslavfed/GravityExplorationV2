@@ -20,8 +20,8 @@ def plot_sensors(sensors):
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Value")
-    plt.colorbar(sc, label="Value")
-    plt.title("Sensor Anomaly Map")
+    plt.colorbar(sc, label=u'Δg')
+    plt.title("Карта аномалий")
 
     plt.savefig('anomaly_chart.png', dpi=300, bbox_inches='tight')
     print(f"Сохранено изображение: {'anomaly_chart.png'}")

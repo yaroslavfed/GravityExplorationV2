@@ -47,7 +47,7 @@ public class SensorsListViewModel : ViewModelBase
 
     public string EndCoordinateLabel { get; set; } = "Верхняя граница";
 
-    public string SplittingParamsLabel { get; set; } = "Кол-во ячеек";
+    public string SplittingParamsLabel { get; set; } = "Кол-во приемников";
 
     [Reactive]
     public SensorsGrid? SensorsGrid { get; private set; }

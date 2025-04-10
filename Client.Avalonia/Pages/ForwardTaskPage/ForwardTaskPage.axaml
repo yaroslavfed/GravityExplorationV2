@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:forwardTaskPage="clr-namespace:Client.Avalonia.Pages.ForwardTaskPage"
              xmlns:card="clr-namespace:Client.Avalonia.Controls.Card"
+             xmlns:converters="clr-namespace:Client.Avalonia.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Client.Avalonia.Pages.ForwardTaskPage.ForwardTaskPage"
              x:DataType="forwardTaskPage:ForwardTaskPageViewModel">
@@ -12,6 +13,10 @@
         <!-- ReSharper disable once Xaml.ConstructorWarning -->
         <forwardTaskPage:ForwardTaskPageViewModel />
     </Design.DataContext>
+
+    <UserControl.Resources>
+        <converters:InvertBooleanConverter x:Key="InvertBooleanConverter" />
+    </UserControl.Resources>
 
     <Grid RowDefinitions="Auto * Auto">
         <card:Card Grid.Row="0" Margin="8 8 8 2">
@@ -52,7 +57,7 @@
                                                Classes="my-1" />
                                     <TextBlock Grid.Row="2"
                                                Classes="ha-left"
-                                               Text="{Binding Value, StringFormat='Показание: {0:0.####}'}">
+                                               Text="{Binding Value, StringFormat=Показание: {0:E5}}">
                                         <ToolTip.Tip>
                                             <StackPanel>
                                                 <TextBlock Classes="align-justify"
@@ -70,7 +75,20 @@
         </card:Card>
         <card:Card Grid.Row="1" Margin="8 2 8 4">
             <Viewbox>
-                <Image Source="{Binding AnomalyImage}" Stretch="Uniform" />
+                <Grid RowDefinitions="* Auto" Classes="my-1">
+                    <Image Grid.Row="0" Source="{Binding AnomalyImage}" Stretch="Uniform" />
+                    <TextBlock Grid.Row="1" Text="Задача завершена"
+                               FontSize="36"
+                               Classes="align-center ha-center va-bottom my-1"
+                               IsVisible="{Binding IsLoadingInProgress, Converter={StaticResource InvertBooleanConverter}}" />
+                    <ProgressBar Grid.Row="1"
+                                 Classes="va-bottom ha-center my-1"
+                                 IsVisible="{Binding IsLoadingInProgress}"
+                                 ShowProgressText="True"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Value="{Binding LoadingProgress}" />
+                </Grid>
             </Viewbox>
         </card:Card>
         <Grid Grid.Row="2" ColumnDefinitions="Auto *" Margin="10 4 10 8">
@@ -86,7 +104,7 @@
             <Button Grid.Column="1"
                     Classes="ha-stretch hca-center"
                     Margin="2 0 0 4"
-                    Content="Перейти к обратной задаче" />
+                    Content="Сохранить как синтетические данные и перейти к обратной задаче" />
         </Grid>
     </Grid>
 

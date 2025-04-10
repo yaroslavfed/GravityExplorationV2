@@ -68,33 +68,37 @@ internal class MeshService : IMeshService
         var cells = new List<Cell>();
 
         for (var i = 0; i < pointsX.Count - 1; i++)
-        for (var j = 0; j < pointsY.Count - 1; j++)
-        for (var k = 0; k < pointsZ.Count - 1; k++)
         {
-            var minX = pointsX[i];
-            var maxX = pointsX[i + 1];
-            var minY = pointsY[j];
-            var maxY = pointsY[j + 1];
-            var minZ = pointsZ[k];
-            var maxZ = pointsZ[k + 1];
-
-            var centerX = (minX + maxX) / 2;
-            var centerY = (minY + maxY) / 2;
-            var centerZ = (minZ + maxZ) / 2;
-
-            var density = octree.FindDensity(centerX, centerY, centerZ) ?? domain.DensityBase;
-            cells.Add(
-                new()
+            for (var j = 0; j < pointsY.Count - 1; j++)
+            {
+                for (var k = 0; k < pointsZ.Count - 1; k++)
                 {
-                    CenterX = centerX,
-                    CenterY = centerY,
-                    CenterZ = centerZ,
-                    BoundX = (maxX - minX) / 2,
-                    BoundY = (maxY - minY) / 2,
-                    BoundZ = (maxZ - minZ) / 2,
-                    Density = density
+                    var minX = pointsX[i];
+                    var maxX = pointsX[i + 1];
+                    var minY = pointsY[j];
+                    var maxY = pointsY[j + 1];
+                    var minZ = pointsZ[k];
+                    var maxZ = pointsZ[k + 1];
+
+                    var centerX = (minX + maxX) / 2;
+                    var centerY = (minY + maxY) / 2;
+                    var centerZ = (minZ + maxZ) / 2;
+
+                    var density = octree.FindDensity(centerX, centerY, centerZ) ?? domain.DensityBase;
+                    cells.Add(
+                        new()
+                        {
+                            CenterX = centerX,
+                            CenterY = centerY,
+                            CenterZ = centerZ,
+                            BoundX = (maxX - minX) / 2,
+                            BoundY = (maxY - minY) / 2,
+                            BoundZ = (maxZ - minZ) / 2,
+                            Density = density
+                        }
+                    );
                 }
-            );
+            }
         }
 
         var mesh = new Mesh { Cells = cells };
@@ -111,7 +115,16 @@ internal class MeshService : IMeshService
     {
         var stratumPoints = stratumStarts.Concat(stratumEnds);
         var domainPoints = await GetPointsByDomainAsync(domainStart, domainEnd, divisions);
-        return stratumPoints.Concat(domainPoints).Distinct().OrderBy(p => p).ToList();
+
+        var minDomain = domainPoints.Min(p => p); // Минимальная точка в domain
+        var maxDomain = domainPoints.Max(p => p); // Максимальная точка в domain
+
+        return stratumPoints
+               .Concat(domainPoints)
+               .Where(p => p >= minDomain && p <= maxDomain)
+               .Distinct()
+               .OrderBy(p => p)
+               .ToList();
     }
 
     private Task<List<double>> GetPointsByDomainAsync(double start, double end, double divisions)

@@ -18,13 +18,17 @@ internal class ForwardTaskService : IForwardTaskService
         _sensorsService = sensorsService;
     }
 
-    public async IAsyncEnumerable<Sensor> GetAnomalyMapAsync()
+    public Task<IAsyncEnumerable<Sensor>> GetAnomalyMapAsync()
     {
-        var mesh = await _meshService.GetMeshAsync();
-        var baseDensity = await _meshService.GetBaseDensityAsync();
-        var sensors = await _sensorsService.GetSensorsAsync();
+        return Core();
 
-        await foreach (var sensor in _anomalyService.GetAnomalyMapAsync(mesh, sensors, baseDensity))
-            yield return sensor;
+        async Task<IAsyncEnumerable<Sensor>> Core()
+        {
+            var mesh = await _meshService.GetMeshAsync();
+            var baseDensity = await _meshService.GetBaseDensityAsync();
+            var sensors = await _sensorsService.GetSensorsAsync();
+
+            return _anomalyService.GetAnomalyMapAsync(mesh, sensors, baseDensity);
+        }
     }
 }

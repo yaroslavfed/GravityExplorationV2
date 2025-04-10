@@ -11,6 +11,7 @@ using Client.Avalonia.Pages.SettingsPage;
 using Client.Avalonia.Properties;
 using Client.Core.Services.AnomalyPlotHelper;
 using Client.Core.Services.ForwardTaskService;
+using Client.Core.Services.SensorsService;
 using Common.Data;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -23,16 +24,19 @@ public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
 {
     private readonly IForwardTaskService _forwardTaskService;
     private readonly IAnomalyPlotHelper  _anomalyPlotHelper;
+    private readonly ISensorsService     _sensorsService;
 
     public ForwardTaskPageViewModel(
         IScreen hostScreen,
         IForwardTaskService forwardTaskService,
-        IAnomalyPlotHelper anomalyPlotHelper
+        IAnomalyPlotHelper anomalyPlotHelper,
+        ISensorsService sensorsService
     )
     {
         HostScreen = hostScreen;
         _forwardTaskService = forwardTaskService;
         _anomalyPlotHelper = anomalyPlotHelper;
+        _sensorsService = sensorsService;
 
         GotoSettingsPageCommand = ReactiveCommand.CreateFromTask(
             OpenSettingsPage,
@@ -43,6 +47,8 @@ public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
             LoadAnomaliesAsync,
             outputScheduler: AvaloniaScheduler.Instance
         );
+
+        IsLoadingInProgress = true;
     }
 
     protected override async Task OnActivation(CompositeDisposable disposables)
@@ -60,6 +66,12 @@ public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
     [Reactive]
     public Bitmap? AnomalyImage { get; set; }
 
+    [Reactive]
+    public int LoadingProgress { get; set; }
+
+    [Reactive]
+    public bool IsLoadingInProgress { get; set; }
+
     public ReactiveCommand<Unit, Unit> GotoSettingsPageCommand { get; }
 
     private ReactiveCommand<Unit, Unit> LoadAnomaliesCommand { get; }
@@ -72,17 +84,25 @@ public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
 
     private async Task LoadAnomaliesAsync()
     {
-        SensorsList.Clear();
+        var totalAnomaliesCount = (await _sensorsService.GetSensorsAsync()).Count;
 
-        await foreach (var sensor in _forwardTaskService.GetAnomalyMapAsync())
+        SensorsList.Clear();
+        LoadingProgress = 0;
+        await foreach (var sensor in await _forwardTaskService.GetAnomalyMapAsync())
         {
             SensorsList.Add(sensor);
 
-            if (SensorsList.Count % 20 == 0)
+            var percentStep = totalAnomaliesCount / 10; // 10% от общего числа
+            if (percentStep > 0 && SensorsList.Count % percentStep == 0)
+            {
                 await UpdateGraphAsync();
+                LoadingProgress += 10;
+            }
         }
 
         await UpdateGraphAsync();
+        LoadingProgress = 100;
+        IsLoadingInProgress = false;
     }
 
     private async Task UpdateGraphAsync()
