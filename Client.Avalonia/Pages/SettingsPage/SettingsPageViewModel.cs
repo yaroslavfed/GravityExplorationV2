@@ -6,6 +6,7 @@ using Client.Avalonia.Containers.AreaSettingsContainer;
 using Client.Avalonia.Containers.PlotsContainer;
 using Client.Avalonia.Pages.ForwardTaskPage;
 using Client.Avalonia.Properties;
+using Client.Core.Services.TrueModelService;
 using ReactiveUI;
 using Splat;
 
@@ -13,15 +14,19 @@ namespace Client.Avalonia.Pages.SettingsPage;
 
 public class SettingsPageViewModel : ViewModelBase, IRoutableViewModel
 {
+    private readonly ITrueModelService _trueModelService;
+
     public SettingsPageViewModel(
         IScreen hostScreen,
         AreaSettingsContainerViewModel areaSettingsContainerViewModel,
-        PlotsContainerViewModel plotsContainerViewModel
+        PlotsContainerViewModel plotsContainerViewModel,
+        ITrueModelService trueModelService
     )
     {
         HostScreen = hostScreen;
         AreaSettingsContainerViewModel = areaSettingsContainerViewModel;
         PlotsContainerViewModel = plotsContainerViewModel;
+        _trueModelService = trueModelService;
 
         GotoForwardTaskPageCommand = ReactiveCommand.CreateFromTask(
             OpenForwardTaskPage,
@@ -41,6 +46,12 @@ public class SettingsPageViewModel : ViewModelBase, IRoutableViewModel
 
     private async Task OpenForwardTaskPage()
     {
+        if (PlotsContainerViewModel!.IsDirty)
+        {
+            await _trueModelService.SaveTaskSolutionAsync(null);
+            PlotsContainerViewModel.IsDirty = false;
+        }
+
         IRoutableViewModel viewModel = Locator.Current.GetService<ForwardTaskPageViewModel>()!;
         await Dispatcher.UIThread.InvokeAsync(() => HostScreen.Router.Navigate.Execute(viewModel));
     }

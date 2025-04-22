@@ -19,21 +19,7 @@ internal class AnomalyService : IAnomalyService
         }
     }
 
-    private double GetAnomaly(Sensor sensor, Cell cell, double baseDensity)
-    {
-        var x0 = cell.CenterX - cell.BoundX;
-        var x1 = cell.CenterX + cell.BoundX;
-        var y0 = cell.CenterY - cell.BoundY;
-        var y1 = cell.CenterY + cell.BoundY;
-        var z0 = cell.CenterZ - cell.BoundZ;
-        var z1 = cell.CenterZ + cell.BoundZ;
-
-        return PhysicalQuantities.GravitationalConstant
-               * (cell.Density - baseDensity)
-               * IntegralCalculation(sensor.X, sensor.Y, sensor.Z, x0, x1, y0, y1, z0, z1);
-    }
-
-    private double IntegralCalculation(
+    public double IntegralCalculation(
         double xReceiver,
         double yReceiver,
         double zReceiver,
@@ -88,5 +74,19 @@ internal class AnomalyService : IAnomalyService
 
             return F(y0, z1) - F(y1, z1) - F(y0, z0) + F(y1, z0);
         }
+    }
+
+    private double GetAnomaly(Sensor sensor, Cell cell, double baseDensity)
+    {
+        var x0 = cell.CenterX - cell.BoundX;
+        var x1 = cell.CenterX + cell.BoundX;
+        var y0 = cell.CenterY - cell.BoundY;
+        var y1 = cell.CenterY + cell.BoundY;
+        var z0 = cell.CenterZ - cell.BoundZ;
+        var z1 = cell.CenterZ + cell.BoundZ;
+
+        return PhysicalQuantities.GravitationalConstant
+               * (cell.Density - baseDensity)
+               * IntegralCalculation(sensor.X, sensor.Y, sensor.Z, x0, x1, y0, y1, z0, z1);
     }
 }

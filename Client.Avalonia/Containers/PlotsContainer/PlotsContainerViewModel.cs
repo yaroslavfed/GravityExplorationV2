@@ -89,6 +89,7 @@ public class PlotsContainerViewModel : ViewModelBase
             .Subscribe(
                 async void (args) =>
                 {
+                    IsDirty = true;
                     IsLoading = true;
                     try
                     {
@@ -136,4 +137,7 @@ public class PlotsContainerViewModel : ViewModelBase
 
     [Reactive]
     public bool IsLoading { get; set; }
+    
+    [Reactive]
+    public bool IsDirty { get; set; }
 }

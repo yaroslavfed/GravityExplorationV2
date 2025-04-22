@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 
-namespace Client.Core.Services.PlotHelper;
+namespace Client.Core.Services.PlotHelperBase;
 
 public abstract class PlotHelperBase<TData>
 {

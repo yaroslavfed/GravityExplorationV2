@@ -7,11 +7,13 @@ using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Avalonia.ReactiveUI;
 using Avalonia.Threading;
+using Client.Avalonia.Pages.GravityInversionTaskPage;
 using Client.Avalonia.Pages.SettingsPage;
 using Client.Avalonia.Properties;
 using Client.Core.Services.AnomalyPlotHelper;
 using Client.Core.Services.ForwardTaskService;
 using Client.Core.Services.SensorsService;
+using Client.Core.Services.TrueModelService;
 using Common.Data;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -25,21 +27,29 @@ public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
     private readonly IForwardTaskService _forwardTaskService;
     private readonly IAnomalyPlotHelper  _anomalyPlotHelper;
     private readonly ISensorsService     _sensorsService;
+    private readonly ITrueModelService   _trueModelService;
 
     public ForwardTaskPageViewModel(
         IScreen hostScreen,
         IForwardTaskService forwardTaskService,
         IAnomalyPlotHelper anomalyPlotHelper,
-        ISensorsService sensorsService
+        ISensorsService sensorsService,
+        ITrueModelService trueModelService
     )
     {
         HostScreen = hostScreen;
         _forwardTaskService = forwardTaskService;
         _anomalyPlotHelper = anomalyPlotHelper;
         _sensorsService = sensorsService;
+        _trueModelService = trueModelService;
 
         GotoSettingsPageCommand = ReactiveCommand.CreateFromTask(
             OpenSettingsPage,
+            outputScheduler: AvaloniaScheduler.Instance
+        );
+
+        GotoOpenGravityInversionTaskPageCommand = ReactiveCommand.CreateFromTask(
+            OpenGravityInversionTaskPage,
             outputScheduler: AvaloniaScheduler.Instance
         );
 
@@ -74,6 +84,8 @@ public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
 
     public ReactiveCommand<Unit, Unit> GotoSettingsPageCommand { get; }
 
+    public ReactiveCommand<Unit, Unit> GotoOpenGravityInversionTaskPageCommand { get; }
+
     private ReactiveCommand<Unit, Unit> LoadAnomaliesCommand { get; }
 
     private async Task OpenSettingsPage()
@@ -82,8 +94,20 @@ public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
         await Dispatcher.UIThread.InvokeAsync(() => HostScreen.Router.Navigate.Execute(viewModel));
     }
 
+    private async Task OpenGravityInversionTaskPage()
+    {
+        IRoutableViewModel viewModel = Locator.Current.GetService<GravityInversionTaskPageViewModel>()!;
+        await Dispatcher.UIThread.InvokeAsync(() => HostScreen.Router.Navigate.Execute(viewModel));
+    }
+
     private async Task LoadAnomaliesAsync()
     {
+        var solution = await _trueModelService.GetTaskSolutionAsync();
+        if (solution is not null)
+        {
+            return;
+        }
+
         var totalAnomaliesCount = (await _sensorsService.GetSensorsAsync()).Count;
 
         SensorsList.Clear();
@@ -92,17 +116,19 @@ public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
         {
             SensorsList.Add(sensor);
 
-            var percentStep = totalAnomaliesCount / 10; // 10% от общего числа
+            var percentStep = totalAnomaliesCount / 1; // TODO: 100% от общего числа, менять по необходимости
             if (percentStep > 0 && SensorsList.Count % percentStep == 0)
             {
                 await UpdateGraphAsync();
-                LoadingProgress += 10;
+                LoadingProgress += percentStep;
             }
         }
 
         await UpdateGraphAsync();
         LoadingProgress = 100;
         IsLoadingInProgress = false;
+
+        await _trueModelService.SaveTaskSolutionAsync(SensorsList);
     }
 
     private async Task UpdateGraphAsync()

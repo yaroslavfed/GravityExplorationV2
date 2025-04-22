@@ -14,5 +14,5 @@ public record Cell
 
     public required double BoundZ { get; init; }
 
-    public double Density { get; init; }
+    public double Density { get; set; }
 }

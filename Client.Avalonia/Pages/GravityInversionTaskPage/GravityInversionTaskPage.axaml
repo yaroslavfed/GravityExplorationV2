@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:forwardTaskPage="clr-namespace:Client.Avalonia.Pages.GravityInversionTaskPage"
+             xmlns:converters="clr-namespace:Client.Avalonia.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Client.Avalonia.Pages.GravityInversionTaskPage.GravityInversionTaskPage"
+             x:DataType="forwardTaskPage:GravityInversionTaskPageViewModel">
+    
+    <Design.DataContext>
+        <!-- ReSharper disable once Xaml.ConstructorWarning -->
+        <forwardTaskPage:GravityInversionTaskPageViewModel />
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <converters:InvertBooleanConverter x:Key="InvertBooleanConverter" />
+    </UserControl.Resources>
+    
+    
+</UserControl>

@@ -1,4 +1,4 @@
-using Client.Core.Services.PlotHelper;
+using Client.Core.Services.PlotHelperBase;
 using Common.Data;
 
 namespace Client.Core.Services.AnomalyPlotHelper;

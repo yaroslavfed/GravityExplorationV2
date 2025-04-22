@@ -5,6 +5,7 @@ using Client.Avalonia.Containers.AreaSettingsContainer.SensorsList;
 using Client.Avalonia.Containers.AreaSettingsContainer.StratumsList;
 using Client.Avalonia.Containers.PlotsContainer;
 using Client.Avalonia.Pages.ForwardTaskPage;
+using Client.Avalonia.Pages.GravityInversionTaskPage;
 using Client.Avalonia.Pages.SettingsPage;
 using Client.Avalonia.Windows.MainWindow;
 using ReactiveUI;
@@ -22,6 +23,7 @@ static internal class ViewModelInstaller
         builder.RegisterType<PlotsContainerViewModel>();
         builder.RegisterType<ForwardTaskPageViewModel>();
         builder.RegisterType<SettingsPageViewModel>();
+        builder.RegisterType<GravityInversionTaskPageViewModel>();
         builder.RegisterType<SensorsListViewModel>();
     }
 }

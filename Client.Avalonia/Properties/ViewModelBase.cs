@@ -13,8 +13,7 @@ public class ViewModelBase : ReactiveObject, IActivatableViewModel
     protected ViewModelBase()
     {
         Activator = new ViewModelActivator();
-        this.WhenActivated(
-            disposables =>
+        this.WhenActivated(disposables =>
             {
                 OnActivation(disposables);
                 SetupPropertyChangedHandler();
@@ -53,9 +52,7 @@ public class ViewModelBase : ReactiveObject, IActivatableViewModel
         PropertyChanged -= OnPropertyChanged;
     }
 
-    protected virtual void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-    }
+    protected virtual void OnPropertyChanged(object? sender, PropertyChangedEventArgs e) { }
 
     #endregion
 

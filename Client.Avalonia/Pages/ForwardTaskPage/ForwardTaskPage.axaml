@@ -104,7 +104,8 @@
             <Button Grid.Column="1"
                     Classes="ha-stretch hca-center"
                     Margin="2 0 0 4"
-                    Content="Сохранить как синтетические данные и перейти к обратной задаче" />
+                    Content="Решение обратной задачи методом Гаусса-Ньютона"
+                    Command="{Binding GotoOpenGravityInversionTaskPageCommand}" />
         </Grid>
     </Grid>
 
