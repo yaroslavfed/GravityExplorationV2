@@ -6,7 +6,34 @@ namespace Client.Core.Storages.StratumStorage;
 
 internal class StratumStorage : IStratumStorage
 {
-    private readonly BehaviorSubject<List<Stratum>> _data = new([]);
+    private readonly BehaviorSubject<List<Stratum>> _data = new(
+        [
+            new Stratum
+            {
+                Id = Guid.NewGuid(),
+                Density = 1800,
+                StartX = -5,
+                EndX = -4,
+                StartY = -5,
+                EndY = 5,
+                StartZ = -6,
+                EndZ = -2,
+                IsActive = false
+            },
+            new Stratum
+            {
+                Id = Guid.NewGuid(),
+                Density = 2000,
+                StartX = 4,
+                EndX = 5,
+                StartY = -5,
+                EndY = 5,
+                StartZ = -6,
+                EndZ = -2,
+                IsActive = false
+            }
+        ]
+    );
 
     public IObservable<IReadOnlyList<Stratum>> StratumList => _data.AsObservable();
 

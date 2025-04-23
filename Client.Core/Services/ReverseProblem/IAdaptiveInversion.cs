@@ -8,8 +8,6 @@ public interface IAdaptiveInversion
         Mesh initialMesh,
         List<Sensor> sensors,
         int totalIterations,
-        int invertIterationsPerLevel,
-        double lambda,
-        double densityThreshold
+        double lambda
     );
 }

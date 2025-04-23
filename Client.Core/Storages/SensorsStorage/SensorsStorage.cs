@@ -1,6 +1,7 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Client.Core.Data;
+using Client.Core.Extensions;
 using Common.Data;
 
 namespace Client.Core.Storages.SensorsStorage;
@@ -14,17 +15,19 @@ internal class SensorsStorage : ISensorsStorage
         _sensors = new(
             new()
             {
-                StartX = 0,
-                EndX = 0,
-                SplitsXCount = 1,
-                StartY = 0,
-                EndY = 0,
-                SplitsYCount = 1
+                StartX = -5,
+                EndX = 5,
+                SplitsXCount = 20,
+                StartY = -5,
+                EndY = 5,
+                SplitsYCount = 20
             }
         );
     }
 
     public IObservable<SensorsGrid> SensorsList => _sensors.AsObservable();
+
+    public Task<SensorsGrid> GetSensorsGridAsync() => Task.FromResult(_sensors.Value);
 
     public async Task<IReadOnlyList<Sensor>> GetSensorsAsync()
     {

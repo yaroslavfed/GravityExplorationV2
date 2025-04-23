@@ -14,39 +14,47 @@ public class AdaptiveInversion : IAdaptiveInversion
         _solver = solver;
     }
 
-    public async Task AdaptiveInvert(
-        Mesh initialMesh,
-        List<Sensor> sensors,
-        int totalIterations,
-        int invertIterationsPerLevel,
-        double lambda,
-        double densityThreshold
-    )
+    public async Task AdaptiveInvert(Mesh initialMesh, List<Sensor> sensors, int totalIterations, double lambda)
     {
         var currentMesh = initialMesh;
 
         for (int i = 0; i < totalIterations; i++)
         {
-            Console.WriteLine($"\n== Итерация {i + 1} ==");
+            Console.WriteLine($"\n== Iteration {i + 1} ==");
 
-            await _solver.Invert(currentMesh, sensors, invertIterationsPerLevel, lambda);
+            var residual = await _solver.Invert(currentMesh, sensors, lambda);
 
-            var refinedCells = RefineCells(currentMesh.Cells, densityThreshold);
-            currentMesh = new() { Cells = refinedCells };
+            if (residual.Length == 0)
+            {
+                Console.WriteLine("End of the discrepancy");
+                return;
+            }
+            
+            Console.WriteLine($"  Max: {residual.Max()}");
+            Console.WriteLine($"  Min: {residual.Min()}");
 
-#if false
-        const string JSON_FILE = "inverse.json";
-        const string PYTHON_PATH = "python";
-        const string OUTPUT_IMAGE = "inverse.png";
+            var threshold = residual.Max();
 
-        await File.WriteAllTextAsync(JSON_FILE, JsonSerializer.Serialize(currentMesh));
+            Console.WriteLine($"  Threshold: {threshold}");
+
+            currentMesh = new() { Cells = RefineCellsByResidual(currentMesh, sensors, residual, threshold) };
+
+            Console.WriteLine($"== Updated grid: {currentMesh.Cells.Count} cells ==");
+        }
+
+#if true
+        const string jsonFile = "inverse.json";
+        const string pythonPath = "python";
+        const string outputImage = "inverse.png";
+
+        await File.WriteAllTextAsync(jsonFile, JsonSerializer.Serialize(currentMesh));
         var currentDirectory = Directory.GetCurrentDirectory();
         var scriptPath = Path.Combine(currentDirectory, "Scripts\\inverse_chart.py");
 
         var psi = new ProcessStartInfo
         {
-            FileName = PYTHON_PATH,
-            Arguments = $"{scriptPath} {JSON_FILE} {OUTPUT_IMAGE}",
+            FileName = pythonPath,
+            Arguments = $"{scriptPath} {jsonFile} {outputImage}",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -54,48 +62,60 @@ public class AdaptiveInversion : IAdaptiveInversion
         };
 
         var process = Process.Start(psi);
-        var output = await process?.StandardOutput.ReadToEndAsync()!;
-        var error = await process?.StandardError.ReadToEndAsync()!;
         await process?.WaitForExitAsync()!;
 #endif
-
-            Console.WriteLine($"→ Обновлённая сетка: {currentMesh.Cells.Count} ячеек");
-        }
     }
 
-    public List<Cell> RefineCells(IEnumerable<Cell> cells, double threshold)
+    public List<Cell> RefineCellsByResidual(
+        Mesh mesh,
+        List<Sensor> sensors,
+        double[] residual,
+        double residualThreshold,
+        double proximity = 1
+    )
     {
         var refined = new List<Cell>();
+        var errorSensors = sensors
+                           .Select((sensor, i) => new { sensor, res = Math.Abs(residual[i]) })
+                           .Where(sr => sr.res > residualThreshold)
+                           .Select(sr => sr.sensor)
+                           .ToList();
 
-        foreach (var cell in cells)
+        foreach (var cell in mesh.Cells)
         {
-            if (Math.Abs(cell.Density) < threshold)
+            bool nearBadSensor = errorSensors.Any(sensor =>
+                                                      Math.Abs(sensor.X - cell.CenterX) < cell.BoundX / 2 + proximity
+                                                      && Math.Abs(sensor.Y - cell.CenterY) < cell.BoundY / 2 + proximity
+            );
+
+            if (!nearBadSensor)
             {
-                refined.Add(cell);
+                refined.Add(cell); // оставить без изменений
                 continue;
             }
 
+            // Делим ячейку
             double hx = cell.BoundX / 2;
             double hy = cell.BoundY / 2;
             double hz = cell.BoundZ / 2;
 
             for (int dx = -1; dx <= 1; dx += 2)
-            for (int dy = -1; dy <= 1; dy += 2)
-            for (int dz = -1; dz <= 1; dz += 2)
-            {
-                refined.Add(
-                    new()
+                for (int dy = -1; dy <= 1; dy += 2)
+                    for (int dz = -1; dz <= 1; dz += 2)
                     {
-                        CenterX = cell.CenterX + dx * hx / 2,
-                        CenterY = cell.CenterY + dy * hy / 2,
-                        CenterZ = cell.CenterZ + dz * hz / 2,
-                        BoundX = hx,
-                        BoundY = hy,
-                        BoundZ = hz,
-                        Density = cell.Density
+                        refined.Add(
+                            new()
+                            {
+                                CenterX = cell.CenterX + dx * hx / 2,
+                                CenterY = cell.CenterY + dy * hy / 2,
+                                CenterZ = cell.CenterZ + dz * hz / 2,
+                                BoundX = hx,
+                                BoundY = hy,
+                                BoundZ = hz,
+                                Density = cell.Density
+                            }
+                        );
                     }
-                );
-            }
         }
 
         return refined;

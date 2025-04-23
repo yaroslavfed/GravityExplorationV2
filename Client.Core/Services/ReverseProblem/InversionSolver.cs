@@ -17,39 +17,31 @@ public class InversionSolver : IInversionSolver
         _meshService = meshService;
     }
 
-    public async Task Invert(Mesh mesh, List<Sensor> sensors, int maxIterations, double lambda, double tolerance = 1e-6)
+    public async Task<double[]> Invert(Mesh mesh, List<Sensor> sensors, double lambda)
     {
         int m = sensors.Count;
         int n = mesh.Cells.Count;
 
-        double previousMisfit = double.MaxValue;
+        double[] gCalc = await CalculateForward(mesh, sensors);
+        double[] residual = sensors.Select((s, i) => s.Value - gCalc[i]).ToArray();
 
-        for (int iter = 0; iter < maxIterations; iter++)
-        {
-            double[] gCalc = await CalculateForward(mesh, sensors);
-            double[] residual = sensors.Select((s, i) => s.Value - gCalc[i]).ToArray();
+        double misfit = residual.Select(r => r * r).Sum();
+        if (misfit <= 1e-16)
+            return [];
 
-            double misfit = residual.Select(r => r * r).Sum();
-            Console.WriteLine($"  [Итерация {iter + 1}] Функционал невязки: {misfit:F6}");
+        Console.WriteLine($"  The functional of the discrepancy: {misfit:E5}");
 
-            if (Math.Abs(previousMisfit - misfit) < tolerance)
-            {
-                Console.WriteLine("  → Критерий останова достигнут: малое изменение невязки");
-                break;
-            }
+        double[,] J = BuildJacobian(mesh, sensors);
+        double[,] JTJ = MultiplyTransposed(J, J, n, m);
+        AddLambdaToDiagonal(JTJ, lambda);
 
-            previousMisfit = misfit;
+        double[] JTresidual = MultiplyTransposeVector(J, residual, n, m);
+        double[] delta = SolveLinearSystem(JTJ, JTresidual);
 
-            double[,] J = BuildJacobian(mesh, sensors);
-            double[,] JTJ = MultiplyTransposed(J, J, n, m);
-            AddLambdaToDiagonal(JTJ, lambda);
+        for (int j = 0; j < n; j++)
+            mesh.Cells[j].Density += delta[j];
 
-            double[] JTresidual = MultiplyTransposeVector(J, residual, n, m);
-            double[] delta = SolveLinearSystem(JTJ, JTresidual);
-
-            for (int j = 0; j < n; j++)
-                mesh.Cells[j].Density += delta[j];
-        }
+        return residual;
     }
 
     // === Заглушки ===
@@ -58,13 +50,13 @@ public class InversionSolver : IInversionSolver
         var baseDensity = await _meshService.GetBaseDensityAsync();
         var anomalyMap = _anomalyService.GetAnomalyMapAsync(mesh, sensors, baseDensity);
 
-        var anomalies = new List<double>();
-        await foreach (var anomaly in anomalyMap)
-        {
-            anomalies.Add(anomaly.Value);
-        }
+        double[] anomalies = new double[sensors.Count];
+        int index = 0;
 
-        return anomalies.ToArray();
+        await foreach (var anomaly in anomalyMap)
+            anomalies[index++] = anomaly.Value;
+
+        return anomalies;
     }
 
     public double[,] BuildJacobian(Mesh mesh, List<Sensor> sensors)
@@ -74,11 +66,11 @@ public class InversionSolver : IInversionSolver
         double[,] J = new double[m, n];
 
         for (int i = 0; i < m; i++)
-        for (int j = 0; j < n; j++)
-        {
-            // ∂g_i/∂ρ_j = влияние j-ой ячейки на i-й сенсор
-            J[i, j] = ComputePartialDerivative(sensors[i], mesh.Cells[j]);
-        }
+            for (int j = 0; j < n; j++)
+            {
+                // ∂g_i/∂ρ_j = влияние j-ой ячейки на i-й сенсор
+                J[i, j] = ComputePartialDerivative(sensors[i], mesh.Cells[j]);
+            }
 
         return J;
     }
@@ -102,13 +94,13 @@ public class InversionSolver : IInversionSolver
     {
         double[,] result = new double[n, n];
         for (int i = 0; i < n; i++)
-        for (int j = 0; j < n; j++)
-        {
-            double sum = 0;
-            for (int k = 0; k < m; k++)
-                sum += A[k, i] * B[k, j];
-            result[i, j] = sum;
-        }
+            for (int j = 0; j < n; j++)
+            {
+                double sum = 0;
+                for (int k = 0; k < m; k++)
+                    sum += A[k, i] * B[k, j];
+                result[i, j] = sum;
+            }
 
         return result;
     }

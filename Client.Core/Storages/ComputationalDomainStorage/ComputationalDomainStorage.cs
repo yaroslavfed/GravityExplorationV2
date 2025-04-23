@@ -12,15 +12,15 @@ internal class ComputationalDomainStorage : IComputationalDomainStorage
         _domain = new(
             new()
             {
-                StartX = 0,
-                EndX = 1,
-                SplitsXCount = 10,
-                StartY = 0,
-                EndY = 1,
-                SplitsYCount = 10,
-                StartZ = 0,
-                EndZ = 1,
-                SplitsZCount = 10
+                StartX = -5,
+                EndX = 5,
+                SplitsXCount = 3,
+                StartY = -5,
+                EndY = 5,
+                SplitsYCount = 3,
+                StartZ = -6,
+                EndZ = -1,
+                SplitsZCount = 3
             }
         );
     }

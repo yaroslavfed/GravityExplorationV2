@@ -7,5 +7,7 @@ public interface ISensorsService : IEditable<SensorsGrid>
 {
     IObservable<SensorsGrid> SensorsGrid { get; }
 
+    Task<SensorsGrid> GetSensorsGridAsync();
+    
     Task<IReadOnlyList<Sensor>> GetSensorsAsync();
 }

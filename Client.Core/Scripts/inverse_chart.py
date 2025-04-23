@@ -65,6 +65,8 @@ def plot_mesh(cells):
          max(cell["CenterZ"] + cell["BoundZ"] for cell in cells)]
     )
 
+    plt.savefig('inverse_chart.png', dpi=300, bbox_inches='tight')
+    print(f"Сохранено изображение: {'inverse_chart.png'}")
     plt.show()
 
 # 🚀 Запуск

@@ -8,5 +8,7 @@ internal interface ISensorsStorage : IEditable<SensorsGrid>
 {
     IObservable<SensorsGrid> SensorsList { get; }
 
+    Task<SensorsGrid> GetSensorsGridAsync();
+
     Task<IReadOnlyList<Sensor>> GetSensorsAsync();
 }
