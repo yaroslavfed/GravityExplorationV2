@@ -1,5 +1,5 @@
 ﻿using Common.Data;
-using ReverseProblem.GaussNewton.Models;
+using Common.Models;
 
 namespace ReverseProblem.Core.Services.AdaptiveInversion;
 
@@ -9,7 +9,7 @@ public interface IAdaptiveInversionService
         Mesh initialMesh,
         List<Sensor> sensors,
         int totalIterations,
-        GaussNewtonInversionOptions inversionOptions,
+        InverseOptions inversionOptions,
         double baseDensity
     );
 }

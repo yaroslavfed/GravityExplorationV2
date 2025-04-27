@@ -102,7 +102,7 @@ public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
 
     private async Task LoadAnomaliesAsync()
     {
-        var solution = await _trueModelService.GetTaskSolutionAsync();
+        var solution = await _trueModelService.GetSolutionAsync();
         if (solution is not null)
         {
             return;
@@ -128,7 +128,7 @@ public class ForwardTaskPageViewModel : ViewModelBase, IRoutableViewModel
         LoadingProgress = 100;
         IsLoadingInProgress = false;
 
-        await _trueModelService.SaveTaskSolutionAsync(SensorsList);
+        await _trueModelService.SaveSolutionAsync(SensorsList);
     }
 
     private async Task UpdateGraphAsync()

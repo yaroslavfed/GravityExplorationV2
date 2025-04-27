@@ -1,4 +1,4 @@
-﻿using ReverseProblem.GaussNewton.Models;
+﻿using Common.Models;
 
 namespace ReverseProblem.GaussNewton.Services.GaussNewtonInversionService;
 
@@ -9,6 +9,7 @@ public interface IGaussNewtonInversionService
         double[] observedValues,
         double[,] jacobian,
         double[] initialParameters,
-        GaussNewtonInversionOptions options
+        InverseOptions options,
+        int iterationNumber = 0
     );
 }

@@ -1,10 +1,12 @@
-﻿using Client.Core.Services.MeshService;
+﻿using System.Diagnostics;
+using System.Text.Json;
+using Client.Core.Services.MeshService;
 using Client.Core.Services.SensorsService;
 using Client.Core.Services.TrueModelService;
 using Common.Data;
+using Common.Models;
 using Common.Services;
 using ReverseProblem.Core.Services.AdaptiveInversion;
-using ReverseProblem.GaussNewton.Models;
 
 namespace Client.Core.Services.InvertTaskService;
 
@@ -30,7 +32,7 @@ public class InvertTaskService : IInvertTaskService
 
     public async Task CalculateInversionAsync()
     {
-        var sensors = await _trueModelService.GetTaskSolutionAsync();
+        var sensors = await _trueModelService.GetSolutionAsync();
 
         if (sensors is null)
         {
@@ -42,22 +44,26 @@ public class InvertTaskService : IInvertTaskService
         var baseDensity = await _meshService.GetBaseDensityAsync();
 
         // TODO: переделать на получение параметров сетки из конфига
-        int splitsX = 5;
-        int splitsY = 5;
-        int splitsZ = 5;
+        int splitsX = 6;
+        int splitsY = 6;
+        int splitsZ = 6;
         double depth = 10; // Глубина сетки по Z
 
         var initialMesh = CreateInitialMeshFromSensorGrid(sensorsGrid, splitsX, splitsY, splitsZ, depth, baseDensity);
 
+        var trueTestMesh = await _meshService.GetMeshAsync();
+
+        var noisedTrueTestModel = MeshNoiseAdder.AddGaussianNoise(trueTestMesh, 99);
+
         var inversionOptions
-            = await ModelFromJsonLoader.LoadOptionsAsync<GaussNewtonInversionOptions>(
-                "Properties/inverse_options.json"
-            );
+            = await ModelFromJsonLoader.LoadOptionsAsync<InverseOptions>("Properties/inverse_options.json");
+
+        await ShowPlotAsync(noisedTrueTestModel);
 
         await _adaptiveInversionService.AdaptiveInvertAsync(
             initialMesh,
             sensors,
-            totalIterations: 100,
+            totalIterations: 5000,
             inversionOptions: inversionOptions,
             baseDensity
         );
@@ -69,7 +75,7 @@ public class InvertTaskService : IInvertTaskService
         int splitsY,
         int splitsZ,
         double depth,
-        double baseDensity = 0
+        double baseDensity
     )
     {
         var cells = new List<Cell>();
@@ -101,5 +107,29 @@ public class InvertTaskService : IInvertTaskService
                 }
 
         return new() { Cells = cells };
+    }
+
+    private async Task ShowPlotAsync(Mesh mesh)
+    {
+        const string jsonFile = "inverse.json";
+        const string pythonPath = "python";
+        const string outputImage = "inverse.png";
+
+        await File.WriteAllTextAsync(jsonFile, JsonSerializer.Serialize(mesh));
+        var currentDirectory = Directory.GetCurrentDirectory();
+        var scriptPath = Path.Combine(currentDirectory, "Scripts\\inverse_chart.py");
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = pythonPath,
+            Arguments = $"{scriptPath} {jsonFile} {outputImage}",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        var process = Process.Start(psi);
+        await process?.WaitForExitAsync()!;
     }
 }

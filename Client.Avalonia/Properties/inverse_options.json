@@ -1,5 +1,10 @@
 ﻿{
-  "Lambda": 1e-6,
+  "FunctionalThreshold": 1e-10,
+  "Lambda": 1e-4,
+  "MinLambda": 1e-10,
+  "LambdaDecay": 0.9,
   "UseTikhonovFirstOrder": true,
-  "UseTikhonovSecondOrder": false
+  "UseTikhonovSecondOrder": false,
+  "AutoAdjustRegularization": true,
+  "GradientThreshold": 5.0
 }

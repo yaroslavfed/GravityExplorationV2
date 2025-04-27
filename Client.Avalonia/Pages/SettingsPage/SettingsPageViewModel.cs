@@ -48,7 +48,7 @@ public class SettingsPageViewModel : ViewModelBase, IRoutableViewModel
     {
         if (PlotsContainerViewModel!.IsDirty)
         {
-            await _trueModelService.SaveTaskSolutionAsync(null);
+            await _trueModelService.SaveSolutionAsync(null);
             PlotsContainerViewModel.IsDirty = false;
         }
 
