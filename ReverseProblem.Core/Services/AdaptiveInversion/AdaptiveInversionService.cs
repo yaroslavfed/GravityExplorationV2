@@ -33,7 +33,8 @@ public class AdaptiveInversionService : IAdaptiveInversionService
         Mesh initialMesh,
         List<Sensor> sensors,
         int totalIterations,
-        InverseOptions inverseOptions,
+        InverseOptions inversionOptions,
+        MeshRefinementOptions refinementOptions,
         double baseDensity
     )
     {
@@ -45,66 +46,71 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             Console.WriteLine($"\n== Iteration of adaptive inversion {iteration + 1} ==");
 
             // 1. Расчёт прямой задачи
-            var anomalyValues = await CalculateForward(currentMesh, sensors, baseDensity);
+            var modelValues = await CalculateForward(currentMesh, sensors, baseDensity);
 
-            // 2. Наблюдённые данные
-            var sensorValues = sensors.Select(s => s.Value).ToArray();
+            // 2. Измеренные значения
+            var observedValues = sensors.Select(s => s.Value).ToArray();
 
-            // 3. Получаем невязку
-            var residuals = sensorValues.Zip(anomalyValues, (obs, calc) => obs - calc).ToArray();
+            // 3. Расчёт невязки
+            var residuals = observedValues.Zip(modelValues, (obs, calc) => obs - calc).ToArray();
 
-            // 4. Проверка на наличие невязки
             if (residuals.Length == 0)
             {
-                Console.WriteLine("End: there is no residual discrepancy");
+                Console.WriteLine("End: no residual discrepancy");
                 return;
             }
 
-            // 5. Вычисляем функционал невязки
-            double currentFunctional = residuals.Sum(r => r * r);
-            Console.WriteLine($"The functional of the discrepancy: {currentFunctional:E16}");
+            // 4. Вычисление функционала невязки
+            var currentFunctional = residuals.Sum(r => r * r);
+            // Console.WriteLine($"Functional of the discrepancy: {currentFunctional:E8}");
 
-            // 6. Проверка критерия останова
-            // 6.1. Проверка на достигнутую точность решения
-            if (currentFunctional < inverseOptions.FunctionalThreshold)
+            // 5. Проверка критерия останова
+            if (currentFunctional < inversionOptions.FunctionalThreshold)
             {
-                Console.WriteLine("End: low functionality has been achieved");
+                Console.WriteLine("Stop criterion: low functional achieved");
                 break;
             }
 
-            // 6.2. Проверка на достаточное уменьшение функционала
-            if (Math.Abs(previousFunctional - currentFunctional) < 1e-16)
+            if (Math.Abs(previousFunctional - currentFunctional) / previousFunctional < 1e-12)
             {
-                Console.WriteLine("End: small change in functionality");
+                Console.WriteLine("Stop criterion: small relative change in functional");
                 break;
             }
 
             previousFunctional = currentFunctional;
 
-            // 7. Построение Якобиана
+            // 6. Построение Якобиана
             var jacobian = _jacobianService.BuildJacobian(currentMesh, sensors);
 
-            // 8. Текущие плотности
+            // 7. Текущие параметры модели
             var modelParameters = currentMesh.Cells.Select(c => c.Density).ToArray();
 
-            // 9. Решаем обратную задачу
+            // 8. Одна итерация метода Гаусса–Ньютона
             var updatedParameters = _gaussNewtonInversionService.Invert(
-                anomalyValues,
-                sensorValues,
+                modelValues,
+                observedValues,
                 jacobian,
                 modelParameters,
-                inverseOptions,
-                iteration
+                inversionOptions,
+                iteration,
+                out double effectiveLambda
             );
 
-            // 10. Обновляем плотности ячеек
+            // 8.1. Лог состояния итерации
+            Console.WriteLine(
+                $"[Iteration {iteration + 1}] Functional: {currentFunctional:E8} | Lambda: {effectiveLambda:E5}"
+            );
+
+            // 9. Обновляем плотности ячеек
             for (int j = 0; j < currentMesh.Cells.Count; j++)
                 currentMesh.Cells[j].Density = updatedParameters[j];
 
-            Console.WriteLine($"The grid after iteration: {currentMesh.Cells.Count} cells");
+            Console.WriteLine($"Updated grid: {currentMesh.Cells.Count} cells");
+
+            // 10. Уточнение/объединение сетки (если нужно)
+            currentMesh = new() { Cells = _meshRefinerService.RefineOrMergeCellsAdvanced(currentMesh) };
         }
 
-        // TODO: строим график результата обратной задачи, позже заменить 3D на срезы по проекциям
         await ShowPlotAsync(currentMesh);
     }
 

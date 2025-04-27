@@ -10,6 +10,7 @@ public interface IGaussNewtonInversionService
         double[,] jacobian,
         double[] initialParameters,
         InverseOptions options,
-        int iterationNumber = 0
+        int iterationNumber,
+        out double effectiveLambda
     );
 }

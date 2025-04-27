@@ -10,6 +10,7 @@ public interface IAdaptiveInversionService
         List<Sensor> sensors,
         int totalIterations,
         InverseOptions inversionOptions,
+        MeshRefinementOptions refinementOptions,
         double baseDensity
     );
 }

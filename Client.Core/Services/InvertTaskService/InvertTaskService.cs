@@ -36,7 +36,7 @@ public class InvertTaskService : IInvertTaskService
 
         if (sensors is null)
         {
-            Console.WriteLine("Ошибка: данные не загружены.");
+            Console.WriteLine("Error: Data has not been uploaded.");
             return;
         }
 
@@ -52,19 +52,22 @@ public class InvertTaskService : IInvertTaskService
         var initialMesh = CreateInitialMeshFromSensorGrid(sensorsGrid, splitsX, splitsY, splitsZ, depth, baseDensity);
 
         var trueTestMesh = await _meshService.GetMeshAsync();
-
         var noisedTrueTestModel = MeshNoiseAdder.AddGaussianNoise(trueTestMesh, 99);
 
         var inversionOptions
             = await ModelFromJsonLoader.LoadOptionsAsync<InverseOptions>("Properties/inverse_options.json");
 
-        await ShowPlotAsync(noisedTrueTestModel);
+        var refinementOptions
+            = await ModelFromJsonLoader.LoadOptionsAsync<MeshRefinementOptions>(
+                "Properties/mesh_refinement_options.json"
+            );
 
         await _adaptiveInversionService.AdaptiveInvertAsync(
             initialMesh,
             sensors,
-            totalIterations: 5000,
-            inversionOptions: inversionOptions,
+            5000,
+            inversionOptions,
+            refinementOptions,
             baseDensity
         );
     }
@@ -90,7 +93,7 @@ public class InvertTaskService : IInvertTaskService
                 {
                     var centerX = grid.StartX + (ix + 0.5) * sizeX;
                     var centerY = grid.StartY + (iy + 0.5) * sizeY;
-                    var centerZ = -(iz + 0.5) * sizeZ; // вниз по Z
+                    var centerZ = -(iz + 0.5) * sizeZ;
 
                     cells.Add(
                         new()
