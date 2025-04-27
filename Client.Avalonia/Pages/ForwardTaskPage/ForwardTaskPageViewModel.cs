@@ -9,7 +9,7 @@ using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using Client.Avalonia.Pages.GravityInversionTaskPage;
 using Client.Avalonia.Pages.SettingsPage;
-using Client.Avalonia.Properties;
+using Client.Avalonia.ViewModels;
 using Client.Core.Services.AnomalyPlotHelper;
 using Client.Core.Services.ForwardTaskService;
 using Client.Core.Services.SensorsService;

@@ -1,7 +1,7 @@
 ﻿using Client.Avalonia.Containers.AreaSettingsContainer.ComputationalDomain;
 using Client.Avalonia.Containers.AreaSettingsContainer.SensorsList;
 using Client.Avalonia.Containers.AreaSettingsContainer.StratumsList;
-using Client.Avalonia.Properties;
+using Client.Avalonia.ViewModels;
 
 namespace Client.Avalonia.Containers.AreaSettingsContainer;
 

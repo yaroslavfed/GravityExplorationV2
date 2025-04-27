@@ -1,0 +1,5 @@
+﻿{
+  "Lambda": 1e-6,
+  "UseTikhonovFirstOrder": true,
+  "UseTikhonovSecondOrder": false
+}

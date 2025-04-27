@@ -2,9 +2,9 @@
 using Client.Core.Services.AnomalyPlotHelper;
 using Client.Core.Services.ComputationalDomainService;
 using Client.Core.Services.ForwardTaskService;
+using Client.Core.Services.InvertTaskService;
 using Client.Core.Services.MeshService;
 using Client.Core.Services.PlotService;
-using Client.Core.Services.ReverseProblem;
 using Client.Core.Services.SensorsService;
 using Client.Core.Services.StratumService;
 using Client.Core.Services.TrueModelService;
@@ -22,8 +22,7 @@ public static class ServiceInstaller
         builder.RegisterType<SensorsService>().As<ISensorsService>();
         builder.RegisterType<MeshService>().As<IMeshService>();
         builder.RegisterType<ForwardTaskService>().As<IForwardTaskService>();
-        builder.RegisterType<InversionSolver>().As<IInversionSolver>();
-        builder.RegisterType<AdaptiveInversion>().As<IAdaptiveInversion>();
+        builder.RegisterType<InvertTaskService>().As<IInvertTaskService>();
 
         builder.RegisterType<MeshPlotHelper>().As<IMeshPlotHelper>();
         builder.RegisterType<AnomalyPlotHelper>().As<IAnomalyPlotHelper>();

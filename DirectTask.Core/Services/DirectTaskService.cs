@@ -4,7 +4,7 @@ using static System.Math;
 
 namespace DirectTask.Core.Services;
 
-internal class AnomalyService : IAnomalyService
+internal class DirectTaskService : IDirectTaskService
 {
     public async IAsyncEnumerable<Sensor> GetAnomalyMapAsync(
         Mesh mesh,
