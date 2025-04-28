@@ -95,6 +95,9 @@ public class AdaptiveInversionService : IAdaptiveInversionService
                 break;
             }
 
+            var difference = previousFunctional - currentFunctional;
+            Console.WriteLine($"Difference between previous functional and current functional: {difference:E8}");
+
             previousFunctional = currentFunctional;
 
             // 7. Автоматическое включение сглаживания второго порядка

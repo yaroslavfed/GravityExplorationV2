@@ -28,8 +28,7 @@ public class GaussNewtonInversionService : IGaussNewtonInversionService
         double lambda = options.Lambda;
         if (options is
         {
-            AutoAdjustRegularization: true,
-            UseTikhonovSecondOrder: false
+            AutoAdjustRegularization: true
         })
         {
             lambda *= Math.Pow(options.LambdaDecay, iterationNumber);
