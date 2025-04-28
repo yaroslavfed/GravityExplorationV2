@@ -26,7 +26,11 @@ public class GaussNewtonInversionService : IGaussNewtonInversionService
 
         // 3. Автоматическая настройка регуляризации
         double lambda = options.Lambda;
-        if (options.AutoAdjustRegularization)
+        if (options is
+        {
+            AutoAdjustRegularization: true,
+            UseTikhonovSecondOrder: false
+        })
         {
             lambda *= Math.Pow(options.LambdaDecay, iterationNumber);
             lambda = Math.Max(lambda, options.MinLambda);
@@ -37,7 +41,12 @@ public class GaussNewtonInversionService : IGaussNewtonInversionService
             AddLambdaToDiagonal(JTJ, lambda);
 
         if (options.UseTikhonovSecondOrder)
-            AddTikhonovSecondOrderRegularization(JTJ, initialParameters, options.GradientThreshold, lambda);
+            AddTikhonovSecondOrderRegularization(
+                JTJ,
+                initialParameters,
+                options.GradientThreshold,
+                lambda * options.SecondOrderRegularizationLambdaMultiplier
+            );
 
         // 5. Решаем систему A Δp = b
         var delta = SolveLinearSystem(JTJ, JTr);
@@ -106,7 +115,7 @@ public class GaussNewtonInversionService : IGaussNewtonInversionService
         double[,] A,
         double[] parameters,
         double gradientThreshold,
-        double lambda
+        double adjustedLambda
     )
     {
         int n = parameters.Length;
@@ -117,7 +126,7 @@ public class GaussNewtonInversionService : IGaussNewtonInversionService
 
             if (Math.Abs(gradient) > gradientThreshold)
             {
-                A[i, i] += lambda;
+                A[i, i] += adjustedLambda;
             }
         }
     }

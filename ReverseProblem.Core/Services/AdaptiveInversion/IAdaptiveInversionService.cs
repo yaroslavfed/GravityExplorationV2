@@ -8,7 +8,7 @@ public interface IAdaptiveInversionService
     Task AdaptiveInvertAsync(
         Mesh initialMesh,
         List<Sensor> sensors,
-        int totalIterations,
+        SensorsGrid sensorsGrid,
         InverseOptions inversionOptions,
         MeshRefinementOptions refinementOptions,
         double baseDensity

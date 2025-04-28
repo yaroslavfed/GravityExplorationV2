@@ -43,17 +43,6 @@ public class InvertTaskService : IInvertTaskService
         var sensorsGrid = await _sensorsService.GetSensorsGridAsync();
         var baseDensity = await _meshService.GetBaseDensityAsync();
 
-        // TODO: переделать на получение параметров сетки из конфига
-        int splitsX = 6;
-        int splitsY = 6;
-        int splitsZ = 6;
-        double depth = 10; // Глубина сетки по Z
-
-        var initialMesh = CreateInitialMeshFromSensorGrid(sensorsGrid, splitsX, splitsY, splitsZ, depth, baseDensity);
-
-        var trueTestMesh = await _meshService.GetMeshAsync();
-        var noisedTrueTestModel = MeshNoiseAdder.AddGaussianNoise(trueTestMesh, 99);
-
         var inversionOptions
             = await ModelFromJsonLoader.LoadOptionsAsync<InverseOptions>("Properties/inverse_options.json");
 
@@ -62,10 +51,25 @@ public class InvertTaskService : IInvertTaskService
                 "Properties/mesh_refinement_options.json"
             );
 
+        var meshOptions
+            = await ModelFromJsonLoader.LoadOptionsAsync<InitialMeshOptions>("Properties/initial_mesh_options.json");
+
+        var initialMesh = CreateInitialMeshFromSensorGrid(
+            sensorsGrid,
+            meshOptions.SplitsX,
+            meshOptions.SplitsY,
+            meshOptions.SplitsZ,
+            meshOptions.Depth,
+            baseDensity
+        );
+
+        var trueTestMesh = await _meshService.GetMeshAsync();
+        MeshNoiseAdder.AddGaussianNoise(trueTestMesh, 50);
+        
         await _adaptiveInversionService.AdaptiveInvertAsync(
             initialMesh,
             sensors,
-            5000,
+            sensorsGrid,
             inversionOptions,
             refinementOptions,
             baseDensity

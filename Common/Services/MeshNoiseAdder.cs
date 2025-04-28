@@ -2,12 +2,12 @@
 
 namespace Common.Services;
 
-public class MeshNoiseAdder
+public static class MeshNoiseAdder
 {
     private static readonly Random s_random = new();
 
     // Метод для добавления шума в плотности ячеек
-    public static Mesh AddGaussianNoise(Mesh mesh, double percentage)
+    public static void AddGaussianNoise(Mesh mesh, double percentage)
     {
         // Проверка на допустимость процента
         if (percentage is < 0 or > 100)
@@ -32,7 +32,5 @@ public class MeshNoiseAdder
             // Если необходимо, можно ограничить плотность положительным значением
             cell.Density = Math.Max(newDensity, 0);
         }
-        
-        return mesh;
     }
 }

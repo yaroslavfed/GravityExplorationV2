@@ -1,47 +1,84 @@
 ﻿namespace Common.Models;
 
 /// <summary>
-/// Параметры для управления инверсией методом Гаусса–Ньютона.
+/// Параметры настройки метода Гаусса–Ньютона для решения обратной задачи.
+/// Управляют регуляризацией, критериями останова и адаптацией сглаживания.
 /// </summary>
 public record InverseOptions
 {
     /// <summary>
-    /// Искомый функционал
+    /// Абсолютный порог невязки для остановки инверсии.
+    /// Если функционал меньше этого значения — инверсия завершается.
     /// </summary>
-    public double FunctionalThreshold { get; init; }
+    public double FunctionalThreshold { get; set; }
 
     /// <summary>
-    /// Начальный коэффициент регуляризации.
+    /// Начальный коэффициент регуляризации (амплитудная регуляризация).
     /// </summary>
-    public double Lambda { get; init; }
+    public double Lambda { get; set; }
 
     /// <summary>
-    /// Минимально допустимое значение регуляризации (защита от нуля).
+    /// Минимально допустимое значение регуляризации.
+    /// Используется для ограничения автоматического уменьшения λ.
     /// </summary>
-    public double MinLambda { get; init; }
+    public double MinLambda { get; set; }
 
     /// <summary>
-    /// Коэффициент уменьшения регуляризации на итерацию (например, 0.9 = уменьшение на 10% за итерацию).
+    /// Коэффициент уменьшения λ на каждой итерации.
+    /// Например, 0.7 означает уменьшение на 30% за итерацию.
     /// </summary>
-    public double LambdaDecay { get; init; }
-
-    /// <summary>
-    /// Использовать автоматическую подстройку регуляризации.
-    /// </summary>
-    public bool AutoAdjustRegularization { get; init; }
+    public double LambdaDecay { get; set; }
 
     /// <summary>
     /// Использовать регуляризацию первого порядка (амплитудную).
+    /// Увеличивает диагональные элементы матрицы нормальных уравнений.
     /// </summary>
-    public bool UseTikhonovFirstOrder { get; init; }
+    public bool UseTikhonovFirstOrder { get; set; }
 
     /// <summary>
     /// Использовать регуляризацию второго порядка (сглаживающую).
+    /// Минимизирует кривизну плотностной модели.
     /// </summary>
-    public bool UseTikhonovSecondOrder { get; init; }
+    public bool UseTikhonovSecondOrder { get; set; }
 
     /// <summary>
-    /// Порог для автоматического включения сглаживания.
+    /// Множитель для силы сглаживающей регуляризации второго порядка.
+    /// Применяется к λ при добавлении второго порядка.
     /// </summary>
-    public double GradientThreshold { get; init; }
+    public double SecondOrderRegularizationLambdaMultiplier { get; set; }
+
+    /// <summary>
+    /// Активировать автоматическую настройку регуляризации (уменьшение λ по итерациям).
+    /// </summary>
+    public bool AutoAdjustRegularization { get; set; }
+
+    /// <summary>
+    /// Относительное изменение функционала для остановки инверсии.
+    /// </summary>
+    public double RelativeTolerance { get; set; }
+
+    /// <summary>
+    /// Максимально допустимое число итераций метода адаптивной инверсии.
+    /// Защищает от вечных циклов при плохой сходимости.
+    /// </summary>
+    public int MaxIterations { get; set; }
+
+    /// <summary>
+    /// Порог функционала для активации сглаживающей регуляризации.
+    /// Если функционал падает ниже этого значения — включается сглаживание.
+    /// Может устанавливаться динамически.
+    /// </summary>
+    public double SmoothingActivationThreshold { get; set; }
+
+    /// <summary>
+    /// Доля от начального функционала для автоматического расчёта порога активации сглаживания.
+    /// Например, 0.01 означает активацию при уменьшении функционала в 100 раз.
+    /// </summary>
+    public double DynamicSmoothingActivationFraction { get; set; }
+
+    /// <summary>
+    /// Порог на производную (градиент) плотностей для активации второго порядка регуляризации.
+    /// Используется в AddTikhonovSecondOrderRegularization.
+    /// </summary>
+    public double GradientThreshold { get; set; }
 }

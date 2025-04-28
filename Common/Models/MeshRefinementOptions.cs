@@ -3,30 +3,35 @@
 /// <summary>
 /// Параметры для управления адаптивным уточнением и объединением ячеек сетки.
 /// </summary>
-public class MeshRefinementOptions
+public record MeshRefinementOptions
 {
     /// <summary>
-    /// Максимально допустимый уровень разбиения ячеек (глубина уточнения).
-    /// </summary>
-    public int MaxSubdivisionLevel { get; init; } = 5;
-
-    /// <summary>
-    /// Минимальный допустимый размер ячейки как доля общей длины оси (например, 0.1 = 10% от длины).
+    /// Минимальная доля размера оси для ячеек (например, 0.1 = 10% от размера области).
     /// </summary>
     public double MinCellSizeFraction { get; init; } = 0.1;
 
     /// <summary>
-    /// Максимальный размер ячейки для объединения, выраженный как доля общей длины оси.
+    /// Максимальная доля размера оси для ячеек (например, 0.5 = 50% от размера области).
     /// </summary>
     public double MaxCellSizeFraction { get; init; } = 0.5;
 
     /// <summary>
-    /// Порог величины остаточной невязки, выше которого происходит уточнение ячеек.
+    /// Максимальный уровень дробления ячейки.
     /// </summary>
-    public double ResidualThresholdRefine { get; init; } = 1e-6;
+    public int MaxSubdivisionLevel { get; init; } = 5;
 
     /// <summary>
-    /// Порог величины остаточной невязки, ниже которого происходит объединение ячеек.
+    /// Начальный порог невязки для дробления ячейки.
     /// </summary>
-    public double ResidualThresholdMerge { get; init; } = 1e-8;
+    public double InitialRefineThreshold { get; init; } = 1e-4;
+
+    /// <summary>
+    /// Начальный порог невязки для объединения ячеек.
+    /// </summary>
+    public double InitialMergeThreshold { get; init; } = 1e-6;
+
+    /// <summary>
+    /// Коэффициент уменьшения порогов дробления и объединения на каждой итерации.
+    /// </summary>
+    public double RefinementDecay { get; init; } = 0.8;
 }

@@ -1,76 +1,181 @@
 import json
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
+from matplotlib.widgets import Button
+from matplotlib.patches import Rectangle
+from mpl_toolkits.mplot3d import Axes3D
 
-# 📂 Загрузка Mesh из файла
 def load_mesh(filepath):
-    with open(filepath, 'r') as f:
-        data = json.load(f)
-    return data['Cells']
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+        return data.get('Cells', [])
+    except Exception as e:
+        print(f"Ошибка загрузки файла: {e}")
+        return []
 
-# 🎨 Получение цвета по плотности
-def density_to_color(density, min_d, max_d):
-    norm = (density - min_d) / (max_d - min_d + 1e-9)
-    return (0, 0, 0, norm)  # Черный цвет с разной прозрачностью
+class InteractiveSliceViewer:
+    def __init__(self, cells):
+        if not cells:
+            print("Нет данных для визуализации!")
+            return
 
-# 🔳 Генерация границ ячейки по центру и размерам
-def get_box(center, bounds):
-    cx, cy, cz = center
-    dx, dy, dz = bounds
+        self.cells = cells
+        self.fig = plt.figure(figsize=(18, 8))
 
-    # Вершины куба
-    x = [cx - dx, cx + dx]
-    y = [cy - dy, cy + dy]
-    z = [cz - dz, cz + dz]
+        # Рассчет границ
+        self.x_bounds = self._calculate_bounds('X')
+        self.y_bounds = self._calculate_bounds('Y')
+        self.z_bounds = self._calculate_bounds('Z')
 
-    # Грани
-    return [
-        [(x[0], y[0], z[0]), (x[1], y[0], z[0]), (x[1], y[1], z[0]), (x[0], y[1], z[0])],  # Нижняя
-        [(x[0], y[0], z[1]), (x[1], y[0], z[1]), (x[1], y[1], z[1]), (x[0], y[1], z[1])],  # Верхняя
-        [(x[0], y[0], z[0]), (x[0], y[1], z[0]), (x[0], y[1], z[1]), (x[0], y[0], z[1])],  # Левая
-        [(x[1], y[0], z[0]), (x[1], y[1], z[0]), (x[1], y[1], z[1]), (x[1], y[0], z[1])],  # Правая
-        [(x[0], y[0], z[0]), (x[1], y[0], z[0]), (x[1], y[0], z[1]), (x[0], y[0], z[1])],  # Передняя
-        [(x[0], y[1], z[0]), (x[1], y[1], z[0]), (x[1], y[1], z[1]), (x[0], y[1], z[1])],  # Задняя
-    ]
+        # Инициализация срезов
+        self.current_slice = {
+            'x': np.mean(self.x_bounds),
+            'y': np.mean(self.y_bounds),
+            'z': np.mean(self.z_bounds)
+        }
 
-# 📊 Основная функция визуализации
-def plot_mesh(cells):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+        # Создание графиков
+        self.ax_3d = self.fig.add_subplot(144, projection='3d')
+        self.ax_xy = self.fig.add_subplot(141)
+        self.ax_yz = self.fig.add_subplot(142)
+        self.ax_xz = self.fig.add_subplot(143)
 
-    densities = [cell["Density"] for cell in cells]
-    min_d = min(densities)
-    max_d = max(densities)
+        self._create_controls()
+        self.update_all_plots()
+        plt.show()
 
-    for cell in cells:
-        center = (cell["CenterX"], cell["CenterY"], cell["CenterZ"])
-        bounds = (cell["BoundX"], cell["BoundY"], cell["BoundZ"])
-        color = density_to_color(cell["Density"], min_d, max_d)
+    def _calculate_bounds(self, axis):
+        min_val = max_val = None
+        for cell in self.cells:
+            center = cell[f"Center{axis}"]
+            bound = cell[f"Bound{axis}"]
+            low = center - bound
+            high = center + bound
+            if min_val is None or low < min_val:
+                min_val = low
+            if max_val is None or high > max_val:
+                max_val = high
+        return (min_val, max_val) if min_val is not None else (0, 1)
 
-        box = get_box(center, bounds)
-        cube = Poly3DCollection(box, facecolors=color, edgecolors='gray', linewidths=0.1)
-        ax.add_collection3d(cube)
+    def _create_controls(self):
+        plt.subplots_adjust(left=0.1, right=0.9, bottom=0.25, top=0.95)
+        self.buttons = {
+            'x+': Button(plt.axes([0.15, 0.15, 0.1, 0.05]), 'X+'),
+            'x-': Button(plt.axes([0.05, 0.15, 0.1, 0.05]), 'X-'),
+            'y+': Button(plt.axes([0.15, 0.05, 0.1, 0.05]), 'Y+'),
+            'y-': Button(plt.axes([0.05, 0.05, 0.1, 0.05]), 'Y-'),
+            'z+': Button(plt.axes([0.15, 0.25, 0.1, 0.05]), 'Z+'),
+            'z-': Button(plt.axes([0.05, 0.25, 0.1, 0.05]), 'Z-')
+        }
 
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
+        for btn in self.buttons.values():
+            btn.label.set_fontsize(8)
 
-    ax.auto_scale_xyz(
-        [min(cell["CenterX"] - cell["BoundX"] for cell in cells),
-         max(cell["CenterX"] + cell["BoundX"] for cell in cells)],
-        [min(cell["CenterY"] - cell["BoundY"] for cell in cells),
-         max(cell["CenterY"] + cell["BoundY"] for cell in cells)],
-        [min(cell["CenterZ"] - cell["BoundZ"] for cell in cells),
-         max(cell["CenterZ"] + cell["BoundZ"] for cell in cells)]
-    )
+        self.buttons['x+'].on_clicked(lambda e: self.adjust_slice('x', 1))
+        self.buttons['x-'].on_clicked(lambda e: self.adjust_slice('x', -1))
+        self.buttons['y+'].on_clicked(lambda e: self.adjust_slice('y', 1))
+        self.buttons['y-'].on_clicked(lambda e: self.adjust_slice('y', -1))
+        self.buttons['z+'].on_clicked(lambda e: self.adjust_slice('z', 1))
+        self.buttons['z-'].on_clicked(lambda e: self.adjust_slice('z', -1))
 
-    plt.savefig('inverse_chart.png', dpi=300, bbox_inches='tight')
-    print(f"Сохранено изображение: {'inverse_chart.png'}")
-    plt.show()
+    def adjust_slice(self, axis, direction):
+        step = (self.__getattribute__(f'{axis}_bounds')[1] -
+                self.__getattribute__(f'{axis}_bounds')[0]) / 20
+        new_val = self.current_slice[axis] + direction * step
+        self.current_slice[axis] = np.clip(new_val, *self.__getattribute__(f'{axis}_bounds'))
+        self.update_all_plots()
 
-# 🚀 Запуск
+    def _filter_cells(self, axis, value):
+        return [cell for cell in self.cells
+                if (cell[f"Center{axis}"] - cell[f"Bound{axis}"] <= value <=
+                    cell[f"Center{axis}"] + cell[f"Bound{axis}"])]
+
+    def _set_square_aspect(self, ax, x_range, y_range):
+        """Устанавливает квадратное соотношение осей с разными диапазонами"""
+        ax.set_box_aspect(y_range / x_range)  # Для matplotlib >= 3.3.0
+        # Или для более старых версий:
+        # ax.set_aspect(y_range / x_range, adjustable='datalim')
+
+    def _plot_projection(self, ax, cells, x_axis, y_axis, fixed_axis):
+        ax.clear()
+
+        if not cells:
+            ax.text(0.5, 0.5, 'Нет данных', ha='center', va='center')
+            return
+
+        # Рассчет диапазонов для осей
+        x_min, x_max = self.__getattribute__(f"{x_axis.lower()}_bounds")
+        y_min, y_max = self.__getattribute__(f"{y_axis.lower()}_bounds")
+        x_range = x_max - x_min
+        y_range = y_max - y_min
+
+        # Установка квадратного соотношения
+        self._set_square_aspect(ax, x_range, y_range)
+
+        densities = [c["Density"] for c in cells]
+        min_d, max_d = min(densities), max(densities)
+        range_d = max_d - min_d if max_d != min_d else 1.0
+
+        for cell in cells:
+            x = cell[f"Center{x_axis}"] - cell[f"Bound{x_axis}"]
+            y = cell[f"Center{y_axis}"] - cell[f"Bound{y_axis}"]
+            width = 2 * cell[f"Bound{x_axis}"]
+            height = 2 * cell[f"Bound{y_axis}"]
+
+            color_value = 1 - (cell["Density"] - min_d) / range_d
+            rect = Rectangle((x, y), width, height,
+                             edgecolor='k', facecolor=plt.cm.gray(color_value), alpha=0.7)
+            ax.add_patch(rect)
+
+        ax.set_xlabel(x_axis)
+        ax.set_ylabel(y_axis)
+        ax.set_title(f"{x_axis}{y_axis} Срез ({fixed_axis} = {self.current_slice[fixed_axis.lower()]:.2f})")
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(y_min, y_max)
+        ax.grid(True)
+
+    def _plot_3d(self):
+        self.ax_3d.clear()
+        densities = [c["Density"] for c in self.cells]
+        min_d, max_d = min(densities), max(densities)
+
+        for cell in self.cells:
+            x = cell["CenterX"]
+            y = cell["CenterY"]
+            z = cell["CenterZ"]
+            dx = cell["BoundX"] * 2
+            dy = cell["BoundY"] * 2
+            dz = cell["BoundZ"] * 2
+
+            color_value = 1 - (cell["Density"] - min_d) / (max_d - min_d)
+            color = plt.cm.gray(color_value)
+
+            self.ax_3d.bar3d(x - cell["BoundX"], y - cell["BoundY"], z - cell["BoundZ"],
+                             dx, dy, dz, color=color, alpha=0.3, edgecolor='k')
+
+        self.ax_3d.set_xlim(*self.x_bounds)
+        self.ax_3d.set_ylim(*self.y_bounds)
+        self.ax_3d.set_zlim(*self.z_bounds)
+        self.ax_3d.set_xlabel('X')
+        self.ax_3d.set_ylabel('Y')
+        self.ax_3d.set_zlabel('Z')
+        self.ax_3d.set_title('3D View')
+
+    def update_all_plots(self):
+        # Обновление 2D проекций
+        self._plot_projection(self.ax_xy, self._filter_cells('Z', self.current_slice['z']), 'X', 'Y', 'Z')
+        self._plot_projection(self.ax_yz, self._filter_cells('X', self.current_slice['x']), 'Y', 'Z', 'X')
+        self._plot_projection(self.ax_xz, self._filter_cells('Y', self.current_slice['y']), 'X', 'Z', 'Y')
+
+        # Обновление 3D вида
+        self._plot_3d()
+
+        self.fig.canvas.draw_idle()
+
 if __name__ == '__main__':
-    mesh_file = 'inverse.json'  # Путь к JSON-файлу
-    cells = load_mesh(mesh_file)
-    plot_mesh(cells)
+    cells = load_mesh('inverse.json')
+    if cells:
+        InteractiveSliceViewer(cells)
+    else:
+        print("Ошибка: Не удалось загрузить данные")
