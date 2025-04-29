@@ -6,7 +6,7 @@ namespace DirectTask.Core.Services;
 
 internal class DirectTaskService : IDirectTaskService
 {
-    public async IAsyncEnumerable<Sensor> GetAnomalyMapAsync(
+    public async IAsyncEnumerable<Sensor> GetAnomalyStreamMapAsync(
         Mesh mesh,
         IReadOnlyList<Sensor> sensors,
         double baseDensity
@@ -19,7 +19,31 @@ internal class DirectTaskService : IDirectTaskService
         }
     }
 
-    public double IntegralCalculation(
+    public List<Sensor> GetAnomalyMapFast(Mesh mesh, IReadOnlyList<Sensor> sensors, double baseDensity)
+    {
+        var result = new Sensor[sensors.Count];
+
+        Parallel.For(
+            0,
+            sensors.Count,
+            i =>
+            {
+                var sensor = sensors[i];
+                double anomaly = 0;
+
+                foreach (var cell in mesh.Cells)
+                {
+                    anomaly += GetAnomaly(sensor, cell, baseDensity);
+                }
+
+                result[i] = sensor with { Value = anomaly };
+            }
+        );
+
+        return result.ToList();
+    }
+
+    private double IntegralCalculation(
         double xReceiver,
         double yReceiver,
         double zReceiver,
@@ -32,7 +56,7 @@ internal class DirectTaskService : IDirectTaskService
     )
     {
         const int n = 25;
-        double h = (x1 - x0) / n;
+        var h = (x1 - x0) / n;
         double result = 0;
 
         for (int i = 0; i < n; i++)
@@ -66,7 +90,7 @@ internal class DirectTaskService : IDirectTaskService
                                 + 2 * w2
                                 + 2 * z * z;
 
-                var divisionResult = top / bottom;
+                double divisionResult = top / bottom;
                 return double.IsNaN(divisionResult)
                     ? Asinh(0)
                     : Asinh(divisionResult);

@@ -1,13 +1,15 @@
 ﻿using Common.Models;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace ReverseProblem.GaussNewton.Services.GaussNewtonInversionService;
 
 public class GaussNewtonInversionService : IGaussNewtonInversionService
 {
+    /// <inheritdoc cref="IGaussNewtonInversionService.Invert"/>
     public double[] Invert(
         double[] modelValues,
         double[] observedValues,
-        double[,] jacobian,
+        double[,] jacobianRaw,
         double[] initialParameters,
         InverseOptions options,
         int iterationNumber,
@@ -18,152 +20,75 @@ public class GaussNewtonInversionService : IGaussNewtonInversionService
         int n = initialParameters.Length;
 
         // 1. Вычисляем вектор невязки r = g_obs - g_calc
-        var residuals = observedValues.Zip(modelValues, (obs, calc) => obs - calc).ToArray();
+        var residual = Vector<double>.Build.DenseOfEnumerable(
+            observedValues.Zip(modelValues, (obs, calc) => obs - calc)
+        );
 
-        // 2. Формируем матрицу A = Jᵀ * J и вектор b = Jᵀ * r
-        var JTJ = MultiplyTransposed(jacobian, jacobian, n, m);
-        var JTr = MultiplyTransposeVector(jacobian, residuals, n, m);
+        // 1. Преобразуем матрицу Якобиана в Math.NET
+        var J = Matrix<double>.Build.DenseOfArray(jacobianRaw);
 
-        // 3. Автоматическая настройка регуляризации
-        double lambda = options.Lambda;
-        if (options is
+        // 2. Вычисляем A = J^T * J и b = J^T * r
+        var JT = J.Transpose();
+        var JTJ = JT * J;
+        var JTr = JT * residual;
+
+        // 3. Вычисляем лямбду с учётом динамического затухания
+        double baseLambda = options.Lambda;
+        effectiveLambda = baseLambda;
+
+        if (options.AutoAdjustRegularization)
         {
-            AutoAdjustRegularization: true
-        })
-        {
-            lambda *= Math.Pow(options.LambdaDecay, iterationNumber);
-            lambda = Math.Max(lambda, options.MinLambda);
+            effectiveLambda = baseLambda * Math.Pow(options.LambdaDecay, iterationNumber);
+            effectiveLambda = Math.Max(effectiveLambda, options.MinLambda);
         }
 
-        // 4. Добавляем регуляризацию
+        // 4. Добавляем амплитудную регуляризацию (первого порядка)
         if (options.UseTikhonovFirstOrder)
-            AddLambdaToDiagonal(JTJ, lambda);
+        {
+            for (int i = 0; i < n; i++)
+                JTJ[i, i] += effectiveLambda;
+        }
 
+        // 5. Добавляем сглаживающую регуляризацию (второго порядка)
         if (options.UseTikhonovSecondOrder)
+        {
             AddTikhonovSecondOrderRegularization(
                 JTJ,
                 initialParameters,
                 options.GradientThreshold,
-                lambda * options.SecondOrderRegularizationLambdaMultiplier
+                effectiveLambda * options.SecondOrderRegularizationLambdaMultiplier
             );
-
-        // 5. Решаем систему A Δp = b
-        var delta = SolveLinearSystem(JTJ, JTr);
-
-        // 6. Обновляем параметры модели: p_new = p_old + Δp
-        var updatedParameters = new double[n];
-        for (int i = 0; i < n; i++)
-        {
-            updatedParameters[i] = initialParameters[i] + delta[i];
         }
 
-        effectiveLambda = lambda;
-        return updatedParameters;
+        // 6. Решаем систему нормальных уравнений
+        var delta = JTJ.Solve(JTr);
+
+        // 7. Обновляем параметры модели
+        return initialParameters.Zip(delta, (p, d) => p + d).ToArray();
     }
 
-    private double[,] MultiplyTransposed(double[,] J, double[,] J2, int n, int m)
-    {
-        var result = new double[n, n];
-
-        for (int i = 0; i < n; i++)
-        {
-            for (int j = 0; j <= i; j++)
-            {
-                double sum = 0;
-                for (int k = 0; k < m; k++)
-                {
-                    sum += J[k, i] * J2[k, j];
-                }
-
-                result[i, j] = sum;
-                result[j, i] = sum;
-            }
-        }
-
-        return result;
-    }
-
-    private double[] MultiplyTransposeVector(double[,] J, double[] r, int n, int m)
-    {
-        var result = new double[n];
-
-        for (int i = 0; i < n; i++)
-        {
-            double sum = 0;
-            for (int k = 0; k < m; k++)
-            {
-                sum += J[k, i] * r[k];
-            }
-
-            result[i] = sum;
-        }
-
-        return result;
-    }
-
-    private void AddLambdaToDiagonal(double[,] A, double lambda)
-    {
-        int n = A.GetLength(0);
-        for (int i = 0; i < n; i++)
-        {
-            A[i, i] += lambda;
-        }
-    }
-
+    /// <summary>
+    /// Добавляет регуляризацию второго порядка, основанную на второй производной (кривизне).
+    /// </summary>
+    /// <param name="A">Матрица A = JᵗJ, в которую добавляется регуляризация.</param>
+    /// <param name="parameters">Текущие параметры модели.</param>
+    /// <param name="threshold">Порог чувствительности к кривизне.</param>
+    /// <param name="lambda">Вес регуляризации.</param>
     private void AddTikhonovSecondOrderRegularization(
-        double[,] A,
+        Matrix<double> A,
         double[] parameters,
-        double gradientThreshold,
-        double adjustedLambda
+        double threshold,
+        double lambda
     )
     {
         int n = parameters.Length;
 
         for (int i = 1; i < n - 1; i++)
         {
-            double gradient = parameters[i + 1] - 2 * parameters[i] + parameters[i - 1];
+            double curvature = parameters[i - 1] - 2 * parameters[i] + parameters[i + 1];
 
-            if (Math.Abs(gradient) > gradientThreshold)
-            {
-                A[i, i] += adjustedLambda;
-            }
+            if (Math.Abs(curvature) > threshold)
+                A[i, i] += lambda;
         }
-    }
-
-    private double[] SolveLinearSystem(double[,] A, double[] b)
-    {
-        int n = b.Length;
-        var x = new double[n];
-        var AClone = (double[,])A.Clone();
-        var bClone = (double[])b.Clone();
-
-        // Прямой ход (приведение к верхнетреугольному виду)
-        for (int k = 0; k < n; k++)
-        {
-            for (int i = k + 1; i < n; i++)
-            {
-                double factor = AClone[i, k] / AClone[k, k];
-                for (int j = k; j < n; j++)
-                {
-                    AClone[i, j] -= factor * AClone[k, j];
-                }
-
-                bClone[i] -= factor * bClone[k];
-            }
-        }
-
-        // Обратный ход
-        for (int i = n - 1; i >= 0; i--)
-        {
-            double sum = 0;
-            for (int j = i + 1; j < n; j++)
-            {
-                sum += AClone[i, j] * x[j];
-            }
-
-            x[i] = (bClone[i] - sum) / AClone[i, i];
-        }
-
-        return x;
     }
 }

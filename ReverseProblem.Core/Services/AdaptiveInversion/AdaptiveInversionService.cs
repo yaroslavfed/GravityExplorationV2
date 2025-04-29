@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using Common.Data;
 using Common.Models;
@@ -31,7 +32,7 @@ public class AdaptiveInversionService : IAdaptiveInversionService
         _meshRefinerService = meshRefinerService;
     }
 
-    public async Task AdaptiveInvertAsync(
+    public Task AdaptiveInvertAsync(
         Mesh initialMesh,
         List<Sensor> sensors,
         SensorsGrid sensorsGrid,
@@ -41,16 +42,18 @@ public class AdaptiveInversionService : IAdaptiveInversionService
     )
     {
         var currentMesh = initialMesh;
-        var previousFunctional = double.MaxValue;
+        double previousFunctional = double.MaxValue;
         double initialFunctional = -1;
 
         _timer.Start();
         for (var iteration = 0; iteration < inversionOptions.MaxIterations; iteration++)
         {
-            Console.WriteLine($"\n== Iteration of adaptive inversion {iteration + 1} ==");
+            var log = new StringBuilder();
+            log.AppendLine($"\n== Adaptive Inversion Iteration {iteration + 1} ==");
 
             // 1. Расчёт прямой задачи
-            var modelValues = await CalculateForward(currentMesh, sensors, baseDensity);
+            var anomalySensors = _directTaskService.GetAnomalyMapFast(currentMesh, sensors, baseDensity);
+            var modelValues = anomalySensors.Select(s => s.Value).ToArray();
 
             // 2. Измеренные значения
             var observedValues = sensors.Select(s => s.Value).ToArray();
@@ -61,13 +64,14 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             // 3.1. Проверка на пустую невязку
             if (residuals.Length == 0)
             {
-                Console.WriteLine("End: no residual discrepancy");
-                return;
+                log.AppendLine("End: no residual discrepancy");
+                Console.WriteLine(log.ToString());
+                return Task.CompletedTask;
             }
 
             // 4. Вычисление функционала невязки
-            var currentFunctional = residuals.Sum(r => r * r);
-            Console.WriteLine($"Current functional: {currentFunctional:E8}");
+            double currentFunctional = residuals.Sum(r => r * r);
+            log.AppendLine($"Functional: {currentFunctional:E8}");
 
             // 5. Сохранение начального функционала и вычисление динамического порога сглаживания
             if (initialFunctional < 0)
@@ -75,10 +79,7 @@ public class AdaptiveInversionService : IAdaptiveInversionService
                 initialFunctional = currentFunctional;
                 inversionOptions.SmoothingActivationThreshold
                     = initialFunctional * inversionOptions.DynamicSmoothingActivationFraction;
-
-                Console.WriteLine(
-                    $"A dynamic threshold for anti-aliasing activation has been set: {inversionOptions.SmoothingActivationThreshold:E5}"
-                );
+                log.AppendLine($"→ Smoothing threshold set: {inversionOptions.SmoothingActivationThreshold:E5}");
             }
 
             // 6. Проверка критерия останова
@@ -88,15 +89,17 @@ public class AdaptiveInversionService : IAdaptiveInversionService
                 break;
             }
 
-            if (Math.Abs(previousFunctional - currentFunctional) / previousFunctional
+            if (currentFunctional < inversionOptions.FunctionalThreshold
+                || Math.Abs(previousFunctional - currentFunctional) / previousFunctional
                 < inversionOptions.RelativeTolerance)
             {
-                Console.WriteLine("Stop criterion: small relative change in functional");
+                log.AppendLine("Stop criterion: small relative change in functional");
+                Console.WriteLine(log.ToString());
                 break;
             }
 
             var difference = previousFunctional - currentFunctional;
-            Console.WriteLine($"Difference between previous functional and current functional: {difference:E8}");
+            log.AppendLine($"Difference between previous functional and current functional: {difference:E8}");
 
             previousFunctional = currentFunctional;
 
@@ -106,9 +109,8 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             {
                 inversionOptions.UseTikhonovSecondOrder = true;
                 inversionOptions.Lambda *= 0.3;
-
-                Console.WriteLine("Second-order smoothing is enabled");
-                Console.WriteLine($"New value of lambda: {inversionOptions.Lambda:E5}");
+                log.AppendLine("Second-order smoothing enabled");
+                log.AppendLine($"New base lambda: {inversionOptions.Lambda:E5}");
             }
 
             // 8. Построение Якобиана
@@ -129,22 +131,22 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             );
 
             // 10.1. Лог состояния итерации
-            Console.WriteLine(
+            log.AppendLine(
                 $"[Iteration {iteration + 1}] Functional: {currentFunctional:E8} | Lambda: {effectiveLambda:E5} | UseTikhonovFirstOrder: {inversionOptions.UseTikhonovFirstOrder} | UseTikhonovSecondOrder: {inversionOptions.UseTikhonovSecondOrder}"
             );
 
             // 11. Обновляем плотности ячеек
-            for (var j = 0; j < currentMesh.Cells.Count; j++)
+            for (int j = 0; j < currentMesh.Cells.Count; j++)
                 currentMesh.Cells[j].Density = updatedParameters[j];
-            Console.WriteLine($"Updated grid: {currentMesh.Cells.Count} cells");
+
+            log.AppendLine($"Cells updated: {currentMesh.Cells.Count}");
 
             // 12. Вычисление динамических порогов дробления/объединения
             double thresholdRefine = refinementOptions.InitialRefineThreshold
                                      * Math.Pow(refinementOptions.RefinementDecay, iteration);
             double thresholdMerge = refinementOptions.InitialMergeThreshold
                                     * Math.Pow(refinementOptions.RefinementDecay, iteration);
-
-            var maxResidual = residuals.Max();
+            double maxResidual = residuals.Max();
 
             // 13. Адаптивное уточнение сетки
             // currentMesh = new()
@@ -160,34 +162,25 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             //         sensorsGrid
             //     )
             // };
+
+            log.AppendLine($"Cells after refinement: {currentMesh.Cells.Count}");
+            Console.WriteLine(log.ToString());
         }
 
         _timer.Stop();
         Console.WriteLine($"Elapsed time: {_timer.Elapsed}");
 
-        await ShowPlotAsync(currentMesh);
+        ShowPlotAsync(currentMesh);
+        return Task.CompletedTask;
     }
 
-    private async Task<double[]> CalculateForward(Mesh mesh, List<Sensor> sensors, double baseDensity)
-    {
-        var anomalyMap = _directTaskService.GetAnomalyMapAsync(mesh, sensors, baseDensity);
-
-        var anomalies = new double[sensors.Count];
-        var index = 0;
-
-        await foreach (var anomaly in anomalyMap)
-            anomalies[index++] = anomaly.Value;
-
-        return anomalies;
-    }
-
-    private async Task ShowPlotAsync(Mesh mesh)
+    private void ShowPlotAsync(Mesh mesh)
     {
         const string jsonFile = "inverse.json";
         const string pythonPath = "python";
         const string outputImage = "inverse.png";
 
-        await File.WriteAllTextAsync(jsonFile, JsonSerializer.Serialize(mesh));
+        File.WriteAllText(jsonFile, JsonSerializer.Serialize(mesh));
         var currentDirectory = Directory.GetCurrentDirectory();
         var scriptPath = Path.Combine(currentDirectory, "Scripts\\inverse_chart.py");
 
@@ -202,6 +195,6 @@ public class AdaptiveInversionService : IAdaptiveInversionService
         };
 
         var process = Process.Start(psi);
-        await process?.WaitForExitAsync()!;
+        process?.WaitForExit();
     }
 }

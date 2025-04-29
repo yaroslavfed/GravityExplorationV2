@@ -1,4 +1,5 @@
-﻿using Common.Data;
+﻿using System.Collections.Concurrent;
+using Common.Data;
 
 namespace ReverseProblem.Core.Services.JacobianService;
 
@@ -15,28 +16,40 @@ public class JacobianService : IJacobianService
     /// <returns>Двумерная матрица Якобиана.</returns>
     public double[,] BuildJacobian(Mesh mesh, List<Sensor> sensors)
     {
-        int m = sensors.Count;    // Количество сенсоров
-        int n = mesh.Cells.Count; // Количество ячеек
+        int m = sensors.Count;
+        int n = mesh.Cells.Count;
 
         var jacobian = new double[m, n];
 
-        Parallel.For(
-            0,
-            n,
-            j =>
+        Parallel.ForEach(
+            Partitioner.Create(0, m),
+            () => new double[n], // локальный буфер строки
+            (range, _, localRow) =>
             {
-                var cell = mesh.Cells[j];
-
-                for (int i = 0; i < m; i++)
+                for (int i = range.Item1; i < range.Item2; i++)
                 {
                     var sensor = sensors[i];
-                    jacobian[i, j] = ComputePartialDerivative(sensor, cell);
+
+                    for (int j = 0; j < n; j++)
+                    {
+                        var cell = mesh.Cells[j];
+                        localRow[j] = ComputePartialDerivative(sensor, cell);
+                    }
+
+                    for (int j = 0; j < n; j++)
+                    {
+                        jacobian[i, j] = localRow[j];
+                    }
                 }
-            }
+
+                return localRow;
+            },
+            _ => { }
         );
 
         return jacobian;
     }
+
 
     /// <summary>
     /// Вычисляет частную производную гравитационного отклика сенсора по плотности ячейки.

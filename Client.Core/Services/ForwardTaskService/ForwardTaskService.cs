@@ -28,7 +28,7 @@ internal class ForwardTaskService : IForwardTaskService
             var baseDensity = await _meshService.GetBaseDensityAsync();
             var sensors = await _sensorsService.GetSensorsAsync();
 
-            return _directTaskService.GetAnomalyMapAsync(mesh, sensors, baseDensity);
+            return _directTaskService.GetAnomalyStreamMapAsync(mesh, sensors, baseDensity);
         }
     }
 }
