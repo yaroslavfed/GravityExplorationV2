@@ -34,4 +34,14 @@ public record MeshRefinementOptions
     /// Коэффициент уменьшения порогов дробления и объединения на каждой итерации.
     /// </summary>
     public double RefinementDecay { get; init; } = 0.8;
+
+    /// <summary>
+    /// Уточнение: если функционал уменьшился в X раз.
+    /// </summary>
+    public double FunctionalImprovementRatio { get; init; } = 100.0;
+
+    /// <summary>
+    /// Уточнение: если абсолютное уменьшение функционала стало малым.
+    /// </summary>
+    public double AdaptiveTriggerTolerance { get; init; } = 1e-12;
 }

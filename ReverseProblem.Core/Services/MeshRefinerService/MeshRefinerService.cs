@@ -29,7 +29,7 @@ public class MeshRefinerService : IMeshRefinerService
 
             // 2. Условия дробления
             if (localResidual > thresholdRefine
-                && localResidual > 1 * maxResidual
+                && localResidual > 0.2 * maxResidual
                 && cell.BoundX > refinementOptions.MinCellSizeFraction * (sensorGrid.EndX - sensorGrid.StartX)
                 && cell.SubdivisionLevel < refinementOptions.MaxSubdivisionLevel)
             {

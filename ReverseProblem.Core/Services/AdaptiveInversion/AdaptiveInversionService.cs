@@ -85,7 +85,8 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             // 6. Проверка критерия останова
             if (currentFunctional < inversionOptions.FunctionalThreshold)
             {
-                Console.WriteLine("Stop criterion: low functional achieved");
+                log.AppendLine("Stop criterion: low functional achieved");
+                Console.WriteLine(log.ToString());
                 break;
             }
 
@@ -99,7 +100,19 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             }
 
             var difference = previousFunctional - currentFunctional;
+            if (difference < 0)
+            {
+                // inversionOptions.Lambda /= 0.1;
+                log.AppendLine("Stop criterion: difference < 0");
+                Console.WriteLine(log.ToString());
+                break;
+            }
+
             log.AppendLine($"Difference between previous functional and current functional: {difference:E8}");
+
+            bool shouldAdapt = previousFunctional / currentFunctional >= refinementOptions.FunctionalImprovementRatio
+                               || Math.Abs(previousFunctional - currentFunctional)
+                               < refinementOptions.AdaptiveTriggerTolerance;
 
             previousFunctional = currentFunctional;
 
@@ -139,31 +152,38 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             for (int j = 0; j < currentMesh.Cells.Count; j++)
                 currentMesh.Cells[j].Density = updatedParameters[j];
 
-            log.AppendLine($"Cells updated: {currentMesh.Cells.Count}");
+            log.AppendLine($"Cells: {currentMesh.Cells.Count}");
 
             // 12. Вычисление динамических порогов дробления/объединения
-            double thresholdRefine = refinementOptions.InitialRefineThreshold
-                                     * Math.Pow(refinementOptions.RefinementDecay, iteration);
-            double thresholdMerge = refinementOptions.InitialMergeThreshold
-                                    * Math.Pow(refinementOptions.RefinementDecay, iteration);
-            double maxResidual = residuals.Max();
+            if (shouldAdapt)
+            {
+                double thresholdRefine = refinementOptions.InitialRefineThreshold
+                                         * Math.Pow(refinementOptions.RefinementDecay, iteration);
+                double thresholdMerge = refinementOptions.InitialMergeThreshold
+                                        * Math.Pow(refinementOptions.RefinementDecay, iteration);
+                double maxResidual = residuals.Max();
 
-            // 13. Адаптивное уточнение сетки
-            // currentMesh = new()
-            // {
-            //     Cells = _meshRefinerService.RefineOrMergeCellsAdvanced(
-            //         currentMesh,
-            //         sensors,
-            //         residuals,
-            //         thresholdRefine,
-            //         thresholdMerge,
-            //         maxResidual,
-            //         refinementOptions,
-            //         sensorsGrid
-            //     )
-            // };
+                currentMesh = new()
+                {
+                    Cells = _meshRefinerService.RefineOrMergeCellsAdvanced(
+                        currentMesh,
+                        sensors,
+                        residuals,
+                        thresholdRefine,
+                        thresholdMerge,
+                        maxResidual,
+                        refinementOptions,
+                        sensorsGrid
+                    )
+                };
 
-            log.AppendLine($"Cells after refinement: {currentMesh.Cells.Count}");
+                log.AppendLine($"Cells after refinement: {currentMesh.Cells.Count}");
+            }
+            else
+            {
+                log.AppendLine("No refinement triggered this iteration");
+            }
+
             Console.WriteLine(log.ToString());
         }
 
