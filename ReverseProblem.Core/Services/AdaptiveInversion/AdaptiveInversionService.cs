@@ -100,19 +100,23 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             }
 
             var difference = previousFunctional - currentFunctional;
-            if (difference < 0)
+
+            // 7.2. Проверка роста функционала
+            if (currentFunctional > previousFunctional * (1 + inversionOptions.FunctionalGrowthTolerance))
             {
-                // inversionOptions.Lambda /= 0.1;
-                log.AppendLine("Stop criterion: difference < 0");
+                inversionOptions.Lambda *= 1.5;
+                log.AppendLine("⚠️ Functional increased — skipping update and increasing lambda");
+                log.AppendLine($"→ New λ: {inversionOptions.Lambda:E5}");
                 Console.WriteLine(log.ToString());
-                break;
+                continue; // пропускаем обновление модели и дробление
             }
 
             log.AppendLine($"Difference between previous functional and current functional: {difference:E8}");
 
-            bool shouldAdapt = previousFunctional / currentFunctional >= refinementOptions.FunctionalImprovementRatio
-                               || Math.Abs(previousFunctional - currentFunctional)
-                               < refinementOptions.AdaptiveTriggerTolerance;
+            bool shouldAdapt = iteration > 0
+                               && (previousFunctional / currentFunctional
+                                   >= refinementOptions.FunctionalImprovementRatio
+                                   || Math.Abs(difference) < refinementOptions.AdaptiveTriggerTolerance);
 
             previousFunctional = currentFunctional;
 
@@ -122,8 +126,23 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             {
                 inversionOptions.UseTikhonovSecondOrder = true;
                 inversionOptions.Lambda *= 0.3;
-                log.AppendLine("Second-order smoothing enabled");
-                log.AppendLine($"New base lambda: {inversionOptions.Lambda:E5}");
+                inversionOptions.SmoothingStartIteration = iteration;
+                log.AppendLine("Second-order smoothing ENABLED");
+                log.AppendLine($"New base λ: {inversionOptions.Lambda:E5}");
+            }
+
+            // 7.1. Автоматическое отключение сглаживания второго порядка
+            if (inversionOptions is
+                {
+                    UseTikhonovSecondOrder: true,
+                    SmoothingStartIteration:
+                    { } startIter
+                }
+                && iteration - startIter >= inversionOptions.MinSmoothingIterations
+                && Math.Abs(previousFunctional - currentFunctional) < inversionOptions.SmoothingDisableThreshold)
+            {
+                inversionOptions.UseTikhonovSecondOrder = false;
+                log.AppendLine("Second-order smoothing DISABLED after insufficient progress");
             }
 
             // 8. Построение Якобиана

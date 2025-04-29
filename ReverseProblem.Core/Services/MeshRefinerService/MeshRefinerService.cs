@@ -19,8 +19,12 @@ public class MeshRefinerService : IMeshRefinerService
     {
         var refinedCells = new List<Cell>();
 
-        // Быстрая индексация сенсоров
+        // Индексация сенсоров
         var sensorPositions = sensors.Select(s => new Vector3((float)s.X, (float)s.Y, (float)s.Z)).ToArray();
+
+        int refinedCount = 0;
+        int mergedCount = 0;
+        int keptCount = 0;
 
         foreach (var cell in mesh.Cells)
         {
@@ -28,66 +32,63 @@ public class MeshRefinerService : IMeshRefinerService
             double localResidual = CalculateLocalResidual(cell, sensorPositions, residuals);
 
             // 2. Условия дробления
-            if (localResidual > thresholdRefine
-                && localResidual > 0.2 * maxResidual
-                && cell.BoundX > refinementOptions.MinCellSizeFraction * (sensorGrid.EndX - sensorGrid.StartX)
-                && cell.SubdivisionLevel < refinementOptions.MaxSubdivisionLevel)
+            bool canRefine = localResidual > thresholdRefine
+                             && localResidual > 0.2 * maxResidual
+                             && cell.BoundX
+                             > refinementOptions.MinCellSizeFraction * (sensorGrid.EndX - sensorGrid.StartX)
+                             && cell.SubdivisionLevel < refinementOptions.MaxSubdivisionLevel;
+
+            bool canMerge = localResidual < thresholdMerge
+                            && cell.BoundX * 2
+                            <= refinementOptions.MaxCellSizeFraction * (sensorGrid.EndX - sensorGrid.StartX);
+
+            if (canRefine)
             {
-                // Дробим ячейку
+                Console.WriteLine(
+                    $"→ Refining cell at ({cell.CenterX}, {cell.CenterY}, {cell.CenterZ}) | Residual: {localResidual:E5}"
+                );
                 refinedCells.AddRange(SplitCell(cell));
+                refinedCount++;
             }
-            // 3. Условия объединения
-            else if (localResidual < thresholdMerge
-                     && cell.BoundX * 2
-                     <= refinementOptions.MaxCellSizeFraction * (sensorGrid.EndX - sensorGrid.StartX))
+            else if (canMerge && CanMergeWithNeighbors(cell, sensorPositions, residuals, thresholdMerge))
             {
-                if (CanMergeWithNeighbors(cell, sensorPositions, residuals, thresholdMerge))
-                {
-                    refinedCells.Add(MergeCell(cell));
-                }
-                else
-                {
-                    refinedCells.Add(cell);
-                }
+                refinedCells.Add(MergeCell(cell));
+                mergedCount++;
             }
-            // 4. Если ячейка не подходит ни под дробление, ни под объединение
             else
             {
                 refinedCells.Add(cell);
+                keptCount++;
             }
         }
 
+        Console.WriteLine($"→ Refined: {refinedCount}, Merged: {mergedCount}, Kept: {keptCount}");
         return refinedCells;
     }
 
     private static double CalculateLocalResidual(Cell cell, Vector3[] sensorPositions, double[] residuals)
     {
-        double influenceRadius = Math.Max(cell.BoundX, Math.Max(cell.BoundY, cell.BoundZ)) * 1.5;
-
+        var center = new Vector3((float)cell.CenterX, (float)cell.CenterY, (float)cell.CenterZ);
         double sum = 0;
-        int count = 0;
-
-        var cellCenter = new Vector3((float)cell.CenterX, (float)cell.CenterY, (float)cell.CenterZ);
+        double totalWeight = 0;
+        const double epsilon = 1e-3f;
 
         for (int i = 0; i < sensorPositions.Length; i++)
         {
-            if (Vector3.Distance(cellCenter, sensorPositions[i]) <= influenceRadius)
-            {
-                sum += Math.Abs(residuals[i]);
-                count++;
-            }
+            double distance = Vector3.Distance(center, sensorPositions[i]);
+            double weight = 1.0 / (distance + epsilon); // вес по расстоянию
+            sum += weight * Math.Abs(residuals[i]);
+            totalWeight += weight;
         }
 
-        if (count == 0)
-            return 0;
-
-        return sum / count;
+        return totalWeight > 0
+            ? sum / totalWeight
+            : 0;
     }
 
     private static List<Cell> SplitCell(Cell cell)
     {
-        var splitCells = new List<Cell>();
-
+        var children = new List<Cell>();
         double hx = cell.BoundX / 2;
         double hy = cell.BoundY / 2;
         double hz = cell.BoundZ / 2;
@@ -96,8 +97,8 @@ public class MeshRefinerService : IMeshRefinerService
             for (int dy = -1; dy <= 1; dy += 2)
                 for (int dz = -1; dz <= 1; dz += 2)
                 {
-                    splitCells.Add(
-                        new Cell
+                    children.Add(
+                        new()
                         {
                             CenterX = cell.CenterX + dx * hx / 2,
                             CenterY = cell.CenterY + dy * hy / 2,
@@ -111,7 +112,7 @@ public class MeshRefinerService : IMeshRefinerService
                     );
                 }
 
-        return splitCells;
+        return children;
     }
 
     private static Cell MergeCell(Cell cell)
@@ -133,11 +134,11 @@ public class MeshRefinerService : IMeshRefinerService
     )
     {
         double influenceRadius = Math.Max(cell.BoundX, Math.Max(cell.BoundY, cell.BoundZ)) * 2.5;
-        var cellCenter = new Vector3((float)cell.CenterX, (float)cell.CenterY, (float)cell.CenterZ);
+        var center = new Vector3((float)cell.CenterX, (float)cell.CenterY, (float)cell.CenterZ);
 
         for (int i = 0; i < sensorPositions.Length; i++)
         {
-            if (Vector3.Distance(cellCenter, sensorPositions[i]) <= influenceRadius)
+            if (Vector3.Distance(center, sensorPositions[i]) <= influenceRadius)
             {
                 if (Math.Abs(residuals[i]) > thresholdMerge)
                     return false;

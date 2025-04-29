@@ -1,4 +1,6 @@
-﻿namespace Common.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace Common.Models;
 
 /// <summary>
 /// Параметры настройки метода Гаусса–Ньютона для решения обратной задачи.
@@ -81,4 +83,25 @@ public record InverseOptions
     /// Используется в AddTikhonovSecondOrderRegularization.
     /// </summary>
     public double GradientThreshold { get; set; }
+
+    /// <summary>
+    /// Порог отключения второй регуляризации при замедлении убывания функционала.
+    /// </summary>
+    public double SmoothingDisableThreshold { get; init; }
+
+    /// <summary>
+    /// Минимальное число итераций, в течение которых сглаживание второго порядка должно быть включено.
+    /// </summary>
+    public int MinSmoothingIterations { get; init; }
+
+    /// <summary>
+    /// Внутреннее поле для отслеживания номера итерации включения сглаживания.
+    /// </summary>
+    [JsonIgnore]
+    public int? SmoothingStartIteration { get; set; }
+    
+    /// <summary>
+    /// Допустимый рост функционала прежде чем считать это отклонением.
+    /// </summary>
+    public double FunctionalGrowthTolerance { get; init; }
 }
