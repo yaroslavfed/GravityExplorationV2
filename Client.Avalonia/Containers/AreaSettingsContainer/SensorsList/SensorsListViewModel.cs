@@ -5,9 +5,10 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.ReactiveUI;
-using Client.Avalonia.Properties;
+using Client.Avalonia.ViewModels;
 using Client.Core.Data;
 using Client.Core.Services.SensorsService;
+using Common.Data;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -33,8 +34,7 @@ public class SensorsListViewModel : ViewModelBase
         _sensorsService
             .SensorsGrid
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(
-                sensors =>
+            .Subscribe(sensors =>
                 {
                     SensorsGrid = sensors;
                     Debug.WriteLine(sensors);

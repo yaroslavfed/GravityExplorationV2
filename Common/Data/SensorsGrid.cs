@@ -1,4 +1,4 @@
-namespace Client.Core.Data;
+namespace Common.Data;
 
 public record SensorsGrid
 {

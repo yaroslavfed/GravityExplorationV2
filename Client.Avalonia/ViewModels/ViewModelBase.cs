@@ -3,7 +3,7 @@ using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using ReactiveUI;
 
-namespace Client.Avalonia.Properties;
+namespace Client.Avalonia.ViewModels;
 
 public class ViewModelBase : ReactiveObject, IActivatableViewModel
 {

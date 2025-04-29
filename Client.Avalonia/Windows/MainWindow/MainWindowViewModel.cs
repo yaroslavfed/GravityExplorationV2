@@ -6,7 +6,7 @@ using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using Client.Avalonia.Pages.ForwardTaskPage;
 using Client.Avalonia.Pages.SettingsPage;
-using Client.Avalonia.Properties;
+using Client.Avalonia.ViewModels;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;

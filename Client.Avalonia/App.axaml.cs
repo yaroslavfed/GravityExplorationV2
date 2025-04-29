@@ -1,7 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Client.Avalonia.Properties;
+using Client.Avalonia.ViewModels;
 using Client.Avalonia.Windows.MainWindow;
 using ReactiveUI;
 using Splat;

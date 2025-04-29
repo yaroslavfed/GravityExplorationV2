@@ -15,4 +15,6 @@ public record Cell
     public required double BoundZ { get; init; }
 
     public double Density { get; set; }
+
+    public double SubdivisionLevel { get; set; }
 }

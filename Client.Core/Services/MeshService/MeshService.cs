@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Text.Json;
 using Client.Core.Extensions;
 using Client.Core.Services.ComputationalDomainService;
 using Client.Core.Services.MeshService.OctreeStructure;

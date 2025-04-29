@@ -4,7 +4,7 @@ namespace Client.Core.Services.TrueModelService;
 
 public interface ITrueModelService
 {
-    Task SaveTaskSolutionAsync(IEnumerable<Sensor>? taskSolution);
+    Task SaveSolutionAsync(IEnumerable<Sensor>? solution);
 
-    Task<List<Sensor>?> GetTaskSolutionAsync();
+    Task<List<Sensor>?> GetSolutionAsync();
 }

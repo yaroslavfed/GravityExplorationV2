@@ -2,8 +2,10 @@
 using Client.Avalonia.Installers;
 using Client.Core.Installers;
 using DirectTask.Core.Installers;
+using ReverseProblem.Core.Installers;
+using ReverseProblem.GaussNewton.Installers;
 
-namespace Client.Avalonia.Properties;
+namespace Client.Avalonia.ViewModels;
 
 internal class Bootstrapper : BootstrapperBase<Bootstrapper>
 {
@@ -16,6 +18,8 @@ internal class Bootstrapper : BootstrapperBase<Bootstrapper>
         builder.RegisterClientCoreStorages();
 
         builder.RegisterDirectTaskCoreServices();
+        builder.RegisterReverseProblemCoreServices();
+        builder.RegisterReverseProblemGaussNewtonServices();
     }
 
     protected override void RegisterViewModels(ContainerBuilder builder)
