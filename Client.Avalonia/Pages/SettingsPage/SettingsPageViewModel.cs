@@ -5,7 +5,7 @@ using Avalonia.Threading;
 using Client.Avalonia.Containers.AreaSettingsContainer;
 using Client.Avalonia.Containers.PlotsContainer;
 using Client.Avalonia.Pages.ForwardTaskPage;
-using Client.Avalonia.Properties;
+using Client.Avalonia.ViewModels;
 using Client.Core.Services.TrueModelService;
 using ReactiveUI;
 using Splat;
@@ -48,7 +48,7 @@ public class SettingsPageViewModel : ViewModelBase, IRoutableViewModel
     {
         if (PlotsContainerViewModel!.IsDirty)
         {
-            await _trueModelService.SaveTaskSolutionAsync(null);
+            await _trueModelService.SaveSolutionAsync(null);
             PlotsContainerViewModel.IsDirty = false;
         }
 

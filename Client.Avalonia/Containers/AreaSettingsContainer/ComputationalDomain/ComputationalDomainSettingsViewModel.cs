@@ -5,7 +5,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.ReactiveUI;
-using Client.Avalonia.Properties;
+using Client.Avalonia.ViewModels;
 using Client.Core.Data;
 using Client.Core.Services.ComputationalDomainService;
 using ReactiveUI;

@@ -4,7 +4,7 @@ using ReactiveUI;
 using Splat;
 using Splat.Autofac;
 
-namespace Client.Avalonia.Properties;
+namespace Client.Avalonia.ViewModels;
 
 public abstract class BootstrapperBase<TBootstrapper> where TBootstrapper : BootstrapperBase<TBootstrapper>, new()
 {

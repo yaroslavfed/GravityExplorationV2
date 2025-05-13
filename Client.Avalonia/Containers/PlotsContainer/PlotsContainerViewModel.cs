@@ -4,13 +4,14 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
-using Client.Avalonia.Properties;
+using Client.Avalonia.ViewModels;
 using Client.Core.Data;
 using Client.Core.Enums;
 using Client.Core.Services.ComputationalDomainService;
 using Client.Core.Services.PlotService;
 using Client.Core.Services.SensorsService;
 using Client.Core.Services.StratumService;
+using Common.Data;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -18,7 +19,7 @@ namespace Client.Avalonia.Containers.PlotsContainer;
 
 public class PlotsContainerViewModel : ViewModelBase
 {
-    private readonly IMeshPlotHelper                _meshPlotHelper;
+    private readonly IMeshPlotHelper             _meshPlotHelper;
     private readonly IComputationalDomainService _domainService;
     private readonly IStratumService             _stratumService;
     private readonly ISensorsService             _sensorsService;
@@ -46,8 +47,7 @@ public class PlotsContainerViewModel : ViewModelBase
         _domainService
             .Domain
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(
-                domain =>
+            .Subscribe(domain =>
                 {
                     Domain = null;
                     Domain = domain;
@@ -58,8 +58,7 @@ public class PlotsContainerViewModel : ViewModelBase
         _stratumService
             .StratumsList
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(
-                list =>
+            .Subscribe(list =>
                 {
                     Stratums = null;
                     Stratums = list;
@@ -70,8 +69,7 @@ public class PlotsContainerViewModel : ViewModelBase
         _sensorsService
             .SensorsGrid
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(
-                sensorsGrid =>
+            .Subscribe(sensorsGrid =>
                 {
                     SensorsGrid = null;
                     SensorsGrid = sensorsGrid;
@@ -80,30 +78,35 @@ public class PlotsContainerViewModel : ViewModelBase
             .DisposeWith(disposables);
 
         this
-            .WhenAnyValue(vm => vm.Domain,
-                          vm => vm.Stratums,
-                          vm => vm.SensorsGrid,
-                          vm => vm.IsSensorsGridTurnedOn,
-                          vm => vm.SelectedProjection)
+            .WhenAnyValue(
+                vm => vm.Domain,
+                vm => vm.Stratums,
+                vm => vm.SensorsGrid,
+                vm => vm.IsSensorsGridTurnedOn,
+                vm => vm.SelectedProjection
+            )
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(
-                async void (args) =>
+            .Subscribe(async void (args) =>
                 {
                     IsDirty = true;
                     IsLoading = true;
                     try
                     {
-                        if (args is not { Item1: { }, Item2: { }, Item3: { } })
+                        if (args is not
+                        {
+                            Item1:
+                            { },
+                            Item2:
+                            { },
+                            Item3:
+                            { }
+                        })
                             return;
-                        
+
                         if (args.Item3 == null)
                             return;
 
-                        var outputImage = await _meshPlotHelper.GenerateChartAsync(
-                            args.Item3,
-                            args.Item4, 
-                            args.Item5
-                        );
+                        var outputImage = await _meshPlotHelper.GenerateChartAsync(args.Item3, args.Item4, args.Item5);
                         ChartImage = new(outputImage);
                     } catch (Exception ex)
                     {
@@ -137,7 +140,7 @@ public class PlotsContainerViewModel : ViewModelBase
 
     [Reactive]
     public bool IsLoading { get; set; }
-    
+
     [Reactive]
     public bool IsDirty { get; set; }
 }

@@ -49,4 +49,16 @@
     <ItemGroup>
       <ProjectReference Include="..\Client.Core\Client.Core.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Properties\initial_mesh_options.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Properties\inverse_options.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Properties\mesh_refinement_options.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
 </Project>

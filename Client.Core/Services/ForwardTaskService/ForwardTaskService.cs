@@ -7,13 +7,13 @@ namespace Client.Core.Services.ForwardTaskService;
 
 internal class ForwardTaskService : IForwardTaskService
 {
-    private readonly IAnomalyService _anomalyService;
+    private readonly IDirectTaskService _directTaskService;
     private readonly IMeshService    _meshService;
     private readonly ISensorsService _sensorsService;
 
-    public ForwardTaskService(IAnomalyService anomalyService, IMeshService meshService, ISensorsService sensorsService)
+    public ForwardTaskService(IDirectTaskService directTaskService, IMeshService meshService, ISensorsService sensorsService)
     {
-        _anomalyService = anomalyService;
+        _directTaskService = directTaskService;
         _meshService = meshService;
         _sensorsService = sensorsService;
     }
@@ -28,7 +28,7 @@ internal class ForwardTaskService : IForwardTaskService
             var baseDensity = await _meshService.GetBaseDensityAsync();
             var sensors = await _sensorsService.GetSensorsAsync();
 
-            return _anomalyService.GetAnomalyMapAsync(mesh, sensors, baseDensity);
+            return _directTaskService.GetAnomalyStreamMapAsync(mesh, sensors, baseDensity);
         }
     }
 }
