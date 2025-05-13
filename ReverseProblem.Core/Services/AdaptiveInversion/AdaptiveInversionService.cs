@@ -18,6 +18,7 @@ public class AdaptiveInversionService : IAdaptiveInversionService
     private readonly IMeshRefinerService          _meshRefinerService;
 
     private readonly Stopwatch _timer = new();
+    private          double    _initialFunctional;
 
     public AdaptiveInversionService(
         IGaussNewtonInversionService gaussNewtonInversionService,
@@ -41,9 +42,11 @@ public class AdaptiveInversionService : IAdaptiveInversionService
         double baseDensity
     )
     {
+        // Истинные значения
+        var observedValues = sensors.Select(s => s.Value).ToArray();
+
         var currentMesh = initialMesh;
         double previousFunctional = double.MaxValue;
-        double initialFunctional = -1;
 
         _timer.Start();
         for (var iteration = 0; iteration < inversionOptions.MaxIterations; iteration++)
@@ -51,101 +54,61 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             var log = new StringBuilder();
             log.AppendLine($"\n== Adaptive Inversion Iteration {iteration + 1} ==");
 
-            // 1. Расчёт прямой задачи
+            // Расчёт прямой задачи
             var anomalySensors = _directTaskService.GetAnomalyMapFast(currentMesh, sensors, baseDensity);
             var modelValues = anomalySensors.Select(s => s.Value).ToArray();
-
-            // 2. Измеренные значения
-            var observedValues = sensors.Select(s => s.Value).ToArray();
-
-            // 3. Расчёт невязки
-            var residuals = observedValues.Zip(modelValues, (obs, calc) => obs - calc).ToArray();
-
-            // 3.1. Проверка на пустую невязку
-            if (residuals.Length == 0)
+            
+            // Расчёт невязки и вычисление функционала
+            var currentFunctional = .0;
+            for (var i = 0; i < modelValues.Length; i++)
             {
-                log.AppendLine("End: no residual discrepancy");
-                Console.WriteLine(log.ToString());
-                return Task.CompletedTask;
+                var residual = observedValues[i] - modelValues[i];
+                var weight = 1;
+
+                currentFunctional += residual * residual * weight * weight;
             }
 
-            // 4. Вычисление функционала невязки
-            double currentFunctional = residuals.Sum(r => r * r);
             log.AppendLine($"Functional: {currentFunctional:E8}");
 
-            // 5. Сохранение начального функционала и вычисление динамического порога сглаживания
-            if (initialFunctional < 0)
+            // Сохранение начального функционала
+            if (iteration == 0)
             {
-                initialFunctional = currentFunctional;
-                inversionOptions.SmoothingActivationThreshold
-                    = initialFunctional * inversionOptions.DynamicSmoothingActivationFraction;
-                log.AppendLine($"→ Smoothing threshold set: {inversionOptions.SmoothingActivationThreshold:E5}");
+                _initialFunctional = currentFunctional;
+                log.AppendLine($"Initial functional: {_initialFunctional:E8}");
             }
 
-            // 6. Проверка критерия останова
-            if (currentFunctional < inversionOptions.FunctionalThreshold)
+            // Проверка на нулевой функционал
+            if (currentFunctional == 0)
             {
-                log.AppendLine("Stop criterion: low functional achieved");
+                log.AppendLine("The model has true parameters");
                 Console.WriteLine(log.ToString());
                 break;
             }
 
-            if (currentFunctional < inversionOptions.FunctionalThreshold
-                || Math.Abs(previousFunctional - currentFunctional) / previousFunctional
-                < inversionOptions.RelativeTolerance)
+            // Проверка на достижение искомого функционала
+            if (currentFunctional / _initialFunctional < inversionOptions.FunctionalThreshold)
             {
-                log.AppendLine("Stop criterion: small relative change in functional");
+                log.AppendLine("The desired value of the functional has been achieved");
                 Console.WriteLine(log.ToString());
                 break;
             }
 
-            var difference = previousFunctional - currentFunctional;
-
-            // 7.2. Проверка роста функционала
-            if (currentFunctional > previousFunctional * (1 + inversionOptions.FunctionalGrowthTolerance))
+            // Проверка на стагнацию функционала
+            if (iteration != 0)
             {
-                inversionOptions.Lambda *= 1.5;
-                log.AppendLine("⚠️ Functional increased — skipping update and increasing lambda");
-                log.AppendLine($"→ New λ: {inversionOptions.Lambda:E5}");
-                Console.WriteLine(log.ToString());
-                continue; // пропускаем обновление модели и дробление
+                var difference = previousFunctional - currentFunctional;
+                log.AppendLine($"Difference between previous functional and current functional: {difference:E8}");
+
+                if (Math.Abs(difference) < inversionOptions.RelativeTolerance)
+                {
+                    log.AppendLine("Small relative change in functional");
+                    Console.WriteLine(log.ToString());
+                }
             }
-
-            log.AppendLine($"Difference between previous functional and current functional: {difference:E8}");
-
-            bool shouldAdapt = iteration > 0
-                               && (previousFunctional / currentFunctional
-                                   >= refinementOptions.FunctionalImprovementRatio
-                                   || Math.Abs(difference) < refinementOptions.AdaptiveTriggerTolerance);
 
             previousFunctional = currentFunctional;
 
-            // 7. Автоматическое включение сглаживания второго порядка
-            if (!inversionOptions.UseTikhonovSecondOrder
-                && currentFunctional < inversionOptions.SmoothingActivationThreshold)
-            {
-                inversionOptions.UseTikhonovSecondOrder = true;
-                inversionOptions.Lambda *= 0.3;
-                inversionOptions.SmoothingStartIteration = iteration;
-                log.AppendLine("Second-order smoothing ENABLED");
-                log.AppendLine($"New base λ: {inversionOptions.Lambda:E5}");
-            }
-
-            // 7.1. Автоматическое отключение сглаживания второго порядка
-            if (inversionOptions is
-                {
-                    UseTikhonovSecondOrder: true,
-                    SmoothingStartIteration:
-                    { } startIter
-                }
-                && iteration - startIter >= inversionOptions.MinSmoothingIterations
-                && Math.Abs(previousFunctional - currentFunctional) < inversionOptions.SmoothingDisableThreshold)
-            {
-                inversionOptions.UseTikhonovSecondOrder = false;
-                log.AppendLine("Second-order smoothing DISABLED after insufficient progress");
-            }
-
-            // 8. Построение Якобиана
+            // 8. Построение A
             var jacobian = _jacobianService.BuildJacobian(currentMesh, sensors);
 
             // 9. Текущие параметры модели
@@ -170,38 +133,7 @@ public class AdaptiveInversionService : IAdaptiveInversionService
             // 11. Обновляем плотности ячеек
             for (int j = 0; j < currentMesh.Cells.Count; j++)
                 currentMesh.Cells[j].Density = updatedParameters[j];
-
             log.AppendLine($"Cells: {currentMesh.Cells.Count}");
-
-            // 12. Вычисление динамических порогов дробления/объединения
-            if (shouldAdapt)
-            {
-                double thresholdRefine = refinementOptions.InitialRefineThreshold
-                                         * Math.Pow(refinementOptions.RefinementDecay, iteration);
-                double thresholdMerge = refinementOptions.InitialMergeThreshold
-                                        * Math.Pow(refinementOptions.RefinementDecay, iteration);
-                double maxResidual = residuals.Max();
-
-                currentMesh = new()
-                {
-                    Cells = _meshRefinerService.RefineOrMergeCellsAdvanced(
-                        currentMesh,
-                        sensors,
-                        residuals,
-                        thresholdRefine,
-                        thresholdMerge,
-                        maxResidual,
-                        refinementOptions,
-                        sensorsGrid
-                    )
-                };
-
-                log.AppendLine($"Cells after refinement: {currentMesh.Cells.Count}");
-            }
-            else
-            {
-                log.AppendLine("No refinement triggered this iteration");
-            }
 
             Console.WriteLine(log.ToString());
         }

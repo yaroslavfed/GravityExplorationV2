@@ -55,7 +55,7 @@ public record InverseOptions
     public bool AutoAdjustRegularization { get; set; }
 
     /// <summary>
-    /// Относительное изменение функционала для остановки инверсии.
+    /// Относительное изменение функционала.
     /// </summary>
     public double RelativeTolerance { get; set; }
 

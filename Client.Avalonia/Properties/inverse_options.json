@@ -1,5 +1,5 @@
 ﻿{
-  "FunctionalThreshold": 1e-12,
+  "FunctionalThreshold": 0.01,
   "Lambda": 1e-6,
   "MinLambda": 1e-12,
   "LambdaDecay": 0.7,
