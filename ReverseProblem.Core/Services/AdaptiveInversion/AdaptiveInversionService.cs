@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.Json;
 using Common.Data;
 using Common.Models;
@@ -10,30 +10,18 @@ using ReverseProblem.GaussNewton.Services.GaussNewtonInversionService;
 
 namespace ReverseProblem.Core.Services.AdaptiveInversion;
 
-public class AdaptiveInversionService : IAdaptiveInversionService
+public class AdaptiveInversionService(
+    IGaussNewtonInversionService gaussNewtonInversionService,
+    IJacobianService jacobianService,
+    IDirectTaskService directTaskService,
+    IMeshRefinerService meshRefinerService
+) : IAdaptiveInversionService
 {
-    private readonly IGaussNewtonInversionService _gaussNewtonInversionService;
-    private readonly IJacobianService             _jacobianService;
-    private readonly IDirectTaskService           _directTaskService;
-    private readonly IMeshRefinerService          _meshRefinerService;
+    private readonly Stopwatch                         _timer = new();
+    private          double                            _initialFunctional;
+    private          ConcurrentDictionary<int, double> _functionalList = [];
 
-    private readonly Stopwatch _timer = new();
-    private          double    _initialFunctional;
-
-    public AdaptiveInversionService(
-        IGaussNewtonInversionService gaussNewtonInversionService,
-        IJacobianService jacobianService,
-        IDirectTaskService directTaskService,
-        IMeshRefinerService meshRefinerService
-    )
-    {
-        _gaussNewtonInversionService = gaussNewtonInversionService;
-        _jacobianService = jacobianService;
-        _directTaskService = directTaskService;
-        _meshRefinerService = meshRefinerService;
-    }
-
-    public Task AdaptiveInvertAsync(
+    public async Task AdaptiveInvertAsync(
         Mesh initialMesh,
         List<Sensor> sensors,
         SensorsGrid sensorsGrid,
@@ -42,80 +30,102 @@ public class AdaptiveInversionService : IAdaptiveInversionService
         double baseDensity
     )
     {
+        // Запуск расчёта времени
+        _timer.Start();
+
         // Истинные значения
         var observedValues = sensors.Select(s => s.Value).ToArray();
-
         var currentMesh = initialMesh;
+
+        double currentFunctional = .0;
         double previousFunctional = double.MaxValue;
 
-        _timer.Start();
         for (var iteration = 0; iteration < inversionOptions.MaxIterations; iteration++)
         {
-            var log = new StringBuilder();
-            log.AppendLine($"\n== Adaptive Inversion Iteration {iteration + 1} ==");
+            Console.WriteLine($"\n== Gauss-Newton inversion: iteration[{iteration + 1}] ==");
 
             // Расчёт прямой задачи
-            var anomalySensors = _directTaskService.GetAnomalyMapFast(currentMesh, sensors, baseDensity);
+            var anomalySensors = directTaskService.GetAnomalyMapFast(currentMesh, sensors, baseDensity);
             var modelValues = anomalySensors.Select(s => s.Value).ToArray();
-            
+
             // Расчёт невязки и вычисление функционала
-            var currentFunctional = .0;
+            currentFunctional = .0;
             for (var i = 0; i < modelValues.Length; i++)
             {
                 var residual = observedValues[i] - modelValues[i];
-                var weight = 1;
+                var weight = 1; // TODO: заменить на применения весов
 
                 currentFunctional += residual * residual * weight * weight;
             }
-
-            log.AppendLine($"Functional: {currentFunctional:E8}");
 
             // Сохранение начального функционала
             if (iteration == 0)
             {
                 _initialFunctional = currentFunctional;
-                log.AppendLine($"Initial functional: {_initialFunctional:E8}");
+                Console.WriteLine($"Initial functional was set to: {_initialFunctional:E8}");
             }
 
             // Проверка на нулевой функционал
-            if (currentFunctional == 0)
+            if (Math.Abs(currentFunctional) < 1e-18)
             {
-                log.AppendLine("The model has true parameters");
-                Console.WriteLine(log.ToString());
+                Console.WriteLine("The model has true parameters");
                 break;
             }
 
             // Проверка на достижение искомого функционала
-            if (currentFunctional / _initialFunctional < inversionOptions.FunctionalThreshold)
+            var functionalDiv = currentFunctional / _initialFunctional;
+            if (!inversionOptions.UseTimeThreshold && functionalDiv <= inversionOptions.FunctionalThreshold)
             {
-                log.AppendLine("The desired value of the functional has been achieved");
-                Console.WriteLine(log.ToString());
+                Console.WriteLine("The desired value of the functional has been achieved");
                 break;
             }
+
+            // Лог по итерации
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine(
+                $"Current functional: {currentFunctional:E8}\t|\tInitial functional: {_initialFunctional:E8}\n"
+                + $"(Current functional) / (Initial functional): {functionalDiv}\t|\tFunctional threshold: {inversionOptions.FunctionalThreshold}"
+            );
+            Console.ResetColor();
 
             // Проверка на стагнацию функционала
             if (iteration != 0)
             {
                 var difference = previousFunctional - currentFunctional;
-                log.AppendLine($"Difference between previous functional and current functional: {difference:E8}");
+                if (difference < 0)
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine($"Difference between previous functional and current functional: {difference:E8}");
+                Console.ResetColor();
 
                 if (Math.Abs(difference) < inversionOptions.RelativeTolerance)
                 {
-                    log.AppendLine("Small relative change in functional");
-                    Console.WriteLine(log.ToString());
+                    Console.WriteLine("Small relative change in functional");
                 }
+            }
+
+            // Проверка на выход по времени
+            if (inversionOptions.UseTimeThreshold && _timer.Elapsed.TotalMinutes >= inversionOptions.TimeThreshold)
+            {
+                Console.WriteLine("The time is out");
+                break;
             }
 
             previousFunctional = currentFunctional;
 
             // 8. Построение A
-            var jacobian = _jacobianService.BuildJacobian(currentMesh, sensors);
+            Console.WriteLine("Calculating jacobian was started");
+            var timer = Stopwatch.StartNew();
+
+            var jacobian = jacobianService.BuildJacobian(currentMesh, sensors);
+
+            timer.Stop();
+            Console.WriteLine($"Calculating jacobian was finished in time: {timer.Elapsed.TotalMinutes} minutes");
 
             // 9. Текущие параметры модели
             var modelParameters = currentMesh.Cells.Select(c => c.Density).ToArray();
 
-            // 10. Итерация метода Гаусса–Ньютона (Решение обратной задачи)
-            var updatedParameters = _gaussNewtonInversionService.Invert(
+            // 10. Итерация метода Гаусса–Ньютона
+            var updatedParameters = gaussNewtonInversionService.Invert(
                 modelValues,
                 observedValues,
                 jacobian,
@@ -125,47 +135,46 @@ public class AdaptiveInversionService : IAdaptiveInversionService
                 out var effectiveLambda
             );
 
-            // 10.1. Лог состояния итерации
-            log.AppendLine(
-                $"[Iteration {iteration + 1}] Functional: {currentFunctional:E8} | Lambda: {effectiveLambda:E5} | UseTikhonovFirstOrder: {inversionOptions.UseTikhonovFirstOrder} | UseTikhonovSecondOrder: {inversionOptions.UseTikhonovSecondOrder}"
-            );
-
             // 11. Обновляем плотности ячеек
             for (int j = 0; j < currentMesh.Cells.Count; j++)
                 currentMesh.Cells[j].Density = updatedParameters[j];
-            log.AppendLine($"Cells: {currentMesh.Cells.Count}");
 
-            Console.WriteLine(log.ToString());
+            _functionalList.TryAdd(iteration, currentFunctional);
+            Console.WriteLine($"Elements: {currentMesh.Cells.Count}");
         }
 
         _timer.Stop();
-        Console.WriteLine($"Elapsed time: {_timer.Elapsed}");
 
-        ShowPlotAsync(currentMesh);
-        return Task.CompletedTask;
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"Elapsed time: {_timer.Elapsed}");
+        Console.WriteLine($"Initial functional: {_initialFunctional:E8}\t|\tLast functional: {currentFunctional:E8}");
+        Console.ResetColor();
+
+        await ShowPlotAsync(currentMesh, sensors);
+        Console.WriteLine("The plot of result has been completed");
     }
 
-    private void ShowPlotAsync(Mesh mesh)
+    private async Task ShowPlotAsync(Mesh mesh, IReadOnlyList<Sensor> sensors)
     {
-        const string jsonFile = "inverse.json";
+        const string jsonFile = "mesh_data.json";
         const string pythonPath = "python";
-        const string outputImage = "inverse.png";
+        const string outputImage = "mesh_data.png";
 
-        File.WriteAllText(jsonFile, JsonSerializer.Serialize(mesh));
+        await File.WriteAllTextAsync(jsonFile, JsonSerializer.Serialize(mesh));
         var currentDirectory = Directory.GetCurrentDirectory();
-        var scriptPath = Path.Combine(currentDirectory, "Scripts\\inverse_chart.py");
+        var scriptPath = Path.Combine(currentDirectory, "Scripts\\show_plots_script.py");
 
         var psi = new ProcessStartInfo
         {
             FileName = pythonPath,
             Arguments = $"{scriptPath} {jsonFile} {outputImage}",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            RedirectStandardInput = true,
+            RedirectStandardOutput = false,
+            RedirectStandardError = true
         };
 
         var process = Process.Start(psi);
-        process?.WaitForExit();
+        await process?.WaitForExitAsync()!;
     }
 }

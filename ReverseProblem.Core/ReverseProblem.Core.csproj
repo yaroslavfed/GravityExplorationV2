@@ -8,7 +8,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DirectTask.Core\DirectTask.Core.csproj" />
-      <ProjectReference Include="..\ReverseProblem.BornApproximation\ReverseProblem.BornApproximation.csproj" />
       <ProjectReference Include="..\ReverseProblem.GaussNewton\ReverseProblem.GaussNewton.csproj" />
     </ItemGroup>
 

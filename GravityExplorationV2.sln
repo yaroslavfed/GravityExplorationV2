@@ -10,8 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReverseProblem.Core", "Reve
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReverseProblem.GaussNewton", "ReverseProblem.GaussNewton\ReverseProblem.GaussNewton.csproj", "{F35844F6-DA69-4045-9016-636C688418E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReverseProblem.BornApproximation", "ReverseProblem.BornApproximation\ReverseProblem.BornApproximation.csproj", "{942C6618-3346-481C-90F0-BC106A6D26BE}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{F125D9FB-4006-4D29-897C-5F9722B164DD}"
 EndProject
 Global
@@ -40,10 +38,6 @@ Global
 		{F35844F6-DA69-4045-9016-636C688418E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F35844F6-DA69-4045-9016-636C688418E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F35844F6-DA69-4045-9016-636C688418E5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{942C6618-3346-481C-90F0-BC106A6D26BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{942C6618-3346-481C-90F0-BC106A6D26BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{942C6618-3346-481C-90F0-BC106A6D26BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{942C6618-3346-481C-90F0-BC106A6D26BE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F125D9FB-4006-4D29-897C-5F9722B164DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F125D9FB-4006-4D29-897C-5F9722B164DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F125D9FB-4006-4D29-897C-5F9722B164DD}.Release|Any CPU.ActiveCfg = Release|Any CPU

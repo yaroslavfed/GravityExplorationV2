@@ -27,6 +27,9 @@
       <None Update="Scripts\inverse_chart.py">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <None Update="Scripts\show_plots_script.py">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>
