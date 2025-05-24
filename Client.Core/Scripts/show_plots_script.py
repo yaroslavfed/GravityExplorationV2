@@ -6,8 +6,9 @@ from typing import List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import ScalarMappable
-from matplotlib.patches import Rectangle
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from matplotlib.patches import Polygon
+from mpl_toolkits.mplot3d.art3d import Line3DCollection
+from scipy.spatial import ConvexHull
 
 
 @dataclass(frozen=True)
@@ -16,10 +17,12 @@ class Point3D:
     Y: float
     Z: float
 
+
 @dataclass(frozen=True)
 class Sensor:
     Position: Point3D
     ComponentDirection: str
+
 
 @dataclass
 class Cell:
@@ -32,8 +35,9 @@ class Cell:
     Density: float
     SubdivisionLevel: float
 
+
 def load_from_json(file_path: str) -> tuple[List[Cell], List[Sensor]]:
-    """Загрузка данных из JSON файла с новой структурой"""
+    """Загрузка данных из JSON файла"""
     try:
         with open(file_path, 'r') as f:
             data = json.load(f)
@@ -42,7 +46,6 @@ def load_from_json(file_path: str) -> tuple[List[Cell], List[Sensor]]:
     except json.JSONDecodeError:
         raise ValueError(f"Ошибка парсинга JSON в файле {file_path}")
 
-    # Загрузка ячеек
     cells = []
     for cell_data in data['Cells']:
         cell = Cell(
@@ -57,7 +60,6 @@ def load_from_json(file_path: str) -> tuple[List[Cell], List[Sensor]]:
         )
         cells.append(cell)
 
-    # Загрузка сенсоров
     sensors = []
     for sensor_data in data.get('sensors', []):
         pos_data = sensor_data['Position']
@@ -70,30 +72,44 @@ def load_from_json(file_path: str) -> tuple[List[Cell], List[Sensor]]:
             ComponentDirection=sensor_data['ComponentDirection']
         ))
 
-    if not cells:
-        raise ValueError("Файл не содержит ячеек для визуализации")
-
     return cells, sensors
 
-def get_cell_corners(cell: Cell) -> np.ndarray:
-    """Возвращает координаты углов ячейки в виде массива 8x3"""
-    x_min = cell.CenterX - cell.BoundX
-    x_max = cell.CenterX + cell.BoundX
-    y_min = cell.CenterY - cell.BoundY
-    y_max = cell.CenterY + cell.BoundY
-    z_min = cell.CenterZ - cell.BoundZ
-    z_max = cell.CenterZ + cell.BoundZ
 
-    return np.array([
-        [x_min, y_min, z_min],  # Левый нижний задний угол
-        [x_max, y_min, z_min],  # Правый нижний задний
-        [x_max, y_max, z_min],  # Правый верхний задний
-        [x_min, y_max, z_min],  # Левый верхний задний
-        [x_min, y_min, z_max],  # Левый нижний передний
-        [x_max, y_min, z_max],  # Правый нижний передний
-        [x_max, y_max, z_max],  # Правый верхний передний
-        [x_min, y_max, z_max]   # Левый верхний передний
+def get_cell_edges(cell: Cell) -> np.ndarray:
+    """Генерирует рёбра ячейки в формате аналогичном FiniteElement"""
+    corners = np.array([
+        [cell.CenterX - cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ - cell.BoundZ],
+        [cell.CenterX + cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ - cell.BoundZ],
+        [cell.CenterX + cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ - cell.BoundZ],
+        [cell.CenterX - cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ - cell.BoundZ],
+        [cell.CenterX - cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ + cell.BoundZ],
+        [cell.CenterX + cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ + cell.BoundZ],
+        [cell.CenterX + cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ + cell.BoundZ],
+        [cell.CenterX - cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ + cell.BoundZ]
     ])
+
+    # Определение рёбер куба
+    edges = [
+        [corners[0], corners[1]], [corners[1], corners[2]], [corners[2], corners[3]], [corners[3], corners[0]],
+        [corners[4], corners[5]], [corners[5], corners[6]], [corners[6], corners[7]], [corners[7], corners[4]],
+        [corners[0], corners[4]], [corners[1], corners[5]], [corners[2], corners[6]], [corners[3], corners[7]]
+    ]
+    return np.array(edges)
+
+
+def get_cell_corners(cell: Cell) -> np.ndarray:
+    """Возвращает все 8 углов ячейки"""
+    return np.array([
+        [cell.CenterX - cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ - cell.BoundZ],
+        [cell.CenterX + cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ - cell.BoundZ],
+        [cell.CenterX + cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ - cell.BoundZ],
+        [cell.CenterX - cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ - cell.BoundZ],
+        [cell.CenterX - cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ + cell.BoundZ],
+        [cell.CenterX + cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ + cell.BoundZ],
+        [cell.CenterX + cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ + cell.BoundZ],
+        [cell.CenterX - cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ + cell.BoundZ]
+    ])
+
 
 def plot_cell_mesh(
         cells: List[Cell],
@@ -102,7 +118,7 @@ def plot_cell_mesh(
         y_slice: Optional[float] = None,
         z_slice: Optional[float] = None
 ):
-    """Визуализация ячеек с поддержкой сечений"""
+    """Функция визуализации с идентичным стилем"""
     fig = plt.figure(figsize=(18, 12))
     gs = fig.add_gridspec(2, 2,
                           left=0.05, right=0.88,
@@ -114,110 +130,196 @@ def plot_cell_mesh(
     ax_bottom_left = fig.add_subplot(gs[1, 0])
     ax_bottom_right = fig.add_subplot(gs[1, 1])
 
-    # Настройка цветовой карты для Density
+    # Настройки как в оригинальном скрипте
     densities = [cell.Density for cell in cells]
     norm = plt.Normalize(min(densities), max(densities))
     cmap = plt.get_cmap('RdYlGn_r')
     mappable = ScalarMappable(norm=norm, cmap=cmap)
 
-    # Расчет границ области визуализации
-    all_corners = np.vstack([get_cell_corners(cell) for cell in cells])
-    min_vals = all_corners.min(axis=0)
-    max_vals = all_corners.max(axis=0)
+    # Пересчитаем границы с учётом всех углов ячеек
+    all_points = np.vstack([get_cell_corners(cell) for cell in cells])
+    min_vals = all_points.min(axis=0)
+    max_vals = all_points.max(axis=0)
     padding = 0.1
-    bounds = {
-        'x': (min_vals[0]-padding, max_vals[0]+padding),
-        'y': (min_vals[1]-padding, max_vals[1]+padding),
-        'z': (min_vals[2]-padding, max_vals[2]+padding)
-    }
 
-    # 3D визуализация ячеек
+    # Вычисляем диапазоны с учетом padding
+    ranges = max_vals - min_vals
+    padding_3d = padding * np.max(ranges)
+
+    # Устанавливаем одинаковые пропорции для всех осей
+    ax3d.set_box_aspect([
+        max_vals[0] - min_vals[0] + 2 * padding_3d,
+        max_vals[1] - min_vals[1] + 2 * padding_3d,
+        max_vals[2] - min_vals[2] + 2 * padding_3d
+    ])
+
+    # Устанавливаем пределы с одинаковым padding для всех осей
+    ax3d.set_xlim(min_vals[0] - padding_3d, max_vals[0] + padding_3d)
+    ax3d.set_ylim(min_vals[1] - padding_3d, max_vals[1] + padding_3d)
+    ax3d.set_zlim(min_vals[2] - padding_3d, max_vals[2] + padding_3d)
+
+    # 3D визуализация (как у FiniteElement)
     if sensors:
         sensor_coords = np.array([[s.Position.X, s.Position.Y, s.Position.Z] for s in sensors])
-        ax3d.scatter(sensor_coords[:,0], sensor_coords[:,1], sensor_coords[:,2],
-                     c='red', s=50, alpha=0.5, label='Sensors')
+        ax3d.scatter(
+            sensor_coords[:, 0], sensor_coords[:, 1], sensor_coords[:, 2],
+            c='red', marker='o', s=50, edgecolors='black', linewidths=0.3,
+            label='Sensors', alpha=0.3
+        )
 
+    # Отрисовка рёбер вместо граней
     for cell in cells:
         color = cmap(norm(cell.Density))
-        corners = get_cell_corners(cell)
+        edges = get_cell_edges(cell)
+        line_collection = Line3DCollection(
+            edges,
+            colors=color,
+            linewidths=1.5,
+            alpha=0.7
+        )
+        ax3d.add_collection3d(line_collection)
 
-        # Рисуем прозрачные грани
-        faces = [
-            [corners[0], corners[1], corners[2], corners[3]],  # Задняя
-            [corners[4], corners[5], corners[6], corners[7]],  # Передняя
-            [corners[0], corners[1], corners[5], corners[4]],  # Нижняя
-            [corners[2], corners[3], corners[7], corners[6]],  # Верхняя
-            [corners[0], corners[3], corners[7], corners[4]],  # Левая
-            [corners[1], corners[2], corners[6], corners[5]]   # Правая
-        ]
+    # Одинаковые настройки осей
+    ax3d.xaxis.set_pane_color((0.95, 0.95, 0.95, 0.1))
+    ax3d.yaxis.set_pane_color((0.95, 0.95, 0.95, 0.1))
+    ax3d.zaxis.set_pane_color((0.95, 0.95, 0.95, 0.1))
+    ax3d.xaxis._axinfo["grid"].update({"linewidth": 0.5, "color": "gray"})
+    ax3d.yaxis._axinfo["grid"].update({"linewidth": 0.5, "color": "gray"})
+    ax3d.zaxis._axinfo["grid"].update({"linewidth": 0.5, "color": "gray"})
 
-        ax3d.add_collection3d(Poly3DCollection(
-            faces, facecolors=color, edgecolors='k', linewidths=0.3, alpha=0.3))
-
-    ax3d.set(xlim=bounds['x'], ylim=bounds['y'], zlim=bounds['z'])
     ax3d.set_xlabel('X', fontsize=12, labelpad=15)
     ax3d.set_ylabel('Y', fontsize=12, labelpad=15)
     ax3d.set_zlabel('Z', fontsize=12, labelpad=15)
     ax3d.set_title('3D View', pad=20)
 
-    # Функции для 2D проекций
+    # Функции для проекций (аналогичные оригиналу)
+    def get_cell_projection_points(cell: Cell, plane: str) -> List[List[float]]:
+        corners = [
+            (cell.CenterX - cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ - cell.BoundZ),
+            (cell.CenterX + cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ - cell.BoundZ),
+            (cell.CenterX + cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ - cell.BoundZ),
+            (cell.CenterX - cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ - cell.BoundZ),
+            (cell.CenterX - cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ + cell.BoundZ),
+            (cell.CenterX + cell.BoundX, cell.CenterY - cell.BoundY, cell.CenterZ + cell.BoundZ),
+            (cell.CenterX + cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ + cell.BoundZ),
+            (cell.CenterX - cell.BoundX, cell.CenterY + cell.BoundY, cell.CenterZ + cell.BoundZ)
+        ]
+
+        proj_points = []
+        for point in corners:
+            if plane == 'xy':
+                proj_points.append([point[0], point[1]])
+            elif plane == 'xz':
+                proj_points.append([point[0], point[2]])
+            else:
+                proj_points.append([point[1], point[2]])
+        return proj_points
+
     def draw_projection(ax, plane: str):
         ax.cla()
-        ax.set_title(f"{plane.upper()} Projection", fontsize=10)
+        ax.set_title(f"{plane.upper()} Projection")
         ax.grid(True, linestyle='--', alpha=0.3)
 
         for cell in cells:
             color = cmap(norm(cell.Density))
+            points = get_cell_projection_points(cell, plane)
 
-            # Определение центра и размеров для проекции
-            if plane == 'xy':
-                x, y = cell.CenterX, cell.CenterY
-                width, height = 2*cell.BoundX, 2*cell.BoundY
-            elif plane == 'xz':
-                x, y = cell.CenterX, cell.CenterZ
-                width, height = 2*cell.BoundX, 2*cell.BoundZ
-            else:  # yz
-                x, y = cell.CenterY, cell.CenterZ
-                width, height = 2*cell.BoundY, 2*cell.BoundZ
+            try:
+                hull = ConvexHull(points)
+                poly = Polygon(
+                    np.array(points)[hull.vertices],
+                    closed=True,
+                    facecolor=color,
+                    edgecolor='k',
+                    alpha=1.0
+                )
+                ax.add_patch(poly)
+            except:
+                for edge in get_cell_edges(cell):
+                    proj_edge = [
+                        [edge[0][0], edge[0][1]] if plane == 'xy' else
+                        [edge[0][0], edge[0][2]] if plane == 'xz' else
+                        [edge[0][1], edge[0][2]],
+                        [edge[1][0], edge[1][1]] if plane == 'xy' else
+                        [edge[1][0], edge[1][2]] if plane == 'xz' else
+                        [edge[1][1], edge[1][2]]
+                    ]
+                    ax.plot(
+                        [proj_edge[0][0], proj_edge[1][0]],
+                        [proj_edge[0][1], proj_edge[1][1]],
+                        color=color, linewidth=1
+                    )
 
-            rect = Rectangle(
-                (x - width/2, y - height/2),
-                width, height,
-                facecolor=color, edgecolor='k', alpha=0.7, linewidth=0.5
-            )
-            ax.add_patch(rect)
-
-        # Установка границ
-        if plane == 'xy':
-            ax.set_xlim(bounds['x'])
-            ax.set_ylim(bounds['y'])
-            ax.set_xlabel('X')
-            ax.set_ylabel('Y')
-        elif plane == 'xz':
-            ax.set_xlim(bounds['x'])
-            ax.set_ylim(bounds['z'])
-            ax.set_xlabel('X')
-            ax.set_ylabel('Z')
-        else:
-            ax.set_xlim(bounds['y'])
-            ax.set_ylim(bounds['z'])
-            ax.set_xlabel('Y')
-            ax.set_ylabel('Z')
-
+        ax.set_xlim(bounds[plane]['x'])
+        ax.set_ylim(bounds[plane]['y'])
         ax.set_aspect('equal')
 
-    # Отрисовка проекций
-    draw_projection(ax_top_right, 'xy')
-    draw_projection(ax_bottom_left, 'xz')
-    draw_projection(ax_bottom_right, 'yz')
+    # Обработка сечений (полностью аналогичная оригиналу)
+    def draw_slice(ax, axis: str, position: float):
+        ax.cla()
+        ax.set_title(f"Сечение по {axis}={position:.2f}")
+        ax.grid(True, linestyle='dotted', alpha=0.5)
+
+        axis_index = {'X': 0, 'Y': 1, 'Z': 2}[axis]
+        for cell in cells:
+            color = cmap(norm(cell.Density))
+            edges = get_cell_edges(cell)
+            slice_points = []
+
+            for edge in edges:
+                coord1 = edge[0][axis_index]
+                coord2 = edge[1][axis_index]
+
+                if (coord1 <= position <= coord2) or (coord2 <= position <= coord1):
+                    t = (position - coord1) / (coord2 - coord1 + 1e-9)
+                    point = edge[0] + t * (edge[1] - edge[0])
+                    slice_points.append(
+                        [point[i] for i in [0, 1, 2] if i != axis_index]
+                    )
+
+            if len(slice_points) >= 3:
+                try:
+                    hull = ConvexHull(slice_points)
+                    poly = Polygon(
+                        np.array(slice_points)[hull.vertices],
+                        closed=True,
+                        facecolor=color,
+                        edgecolor='k',
+                        alpha=1.0
+                    )
+                    ax.add_patch(poly)
+                except:
+                    pass
+
+        ax.autoscale_view()
+        ax.set_aspect('equal')
+
+    # Настройка отображения (как в оригинале)
+    if x_slice is not None:
+        draw_slice(ax_bottom_right, 'X', x_slice)
+        ax_bottom_right.set(xlabel='Y', ylabel='Z')
+    else:
+        draw_projection(ax_bottom_right, 'yz')
+
+    if y_slice is not None:
+        draw_slice(ax_bottom_left, 'Y', y_slice)
+        ax_bottom_left.set(xlabel='X', ylabel='Z')
+    else:
+        draw_projection(ax_bottom_left, 'xz')
+
+    if z_slice is not None:
+        draw_slice(ax_top_right, 'Z', z_slice)
+        ax_top_right.set(xlabel='X', ylabel='Y')
+    else:
+        draw_projection(ax_top_right, 'xy')
 
     # Цветовая шкала
     cbar_ax = fig.add_axes([0.90, 0.15, 0.02, 0.7])
-    cbar = fig.colorbar(mappable, cax=cbar_ax, label='Density')
-    cbar.ax.tick_params(labelsize=10)
+    fig.colorbar(mappable, cax=cbar_ax, label='Mu')
 
-    plt.savefig("graph.png", dpi=300, bbox_inches='tight')
+    plt.savefig("graph.png", dpi=300)
     plt.show()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -225,9 +327,9 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument('-f', '--file', default='mesh_data.json', help='Путь к JSON файлу')
-    parser.add_argument('-x', '--x-slice', type=float, help='Позиция сечения по оси X')
-    parser.add_argument('-y', '--y-slice', type=float, help='Позиция сечения по оси Y')
-    parser.add_argument('-z', '--z-slice', type=float, help='Позиция сечения по оси Z')
+    parser.add_argument('-x', '--x-slice', type=float)
+    parser.add_argument('-y', '--y-slice', type=float)
+    parser.add_argument('-z', '--z-slice', type=float)
 
     args = parser.parse_args()
 
@@ -238,7 +340,7 @@ if __name__ == "__main__":
             sensors=sensors,
             x_slice=0,
             y_slice=0,
-            z_slice=-9
+            z_slice=-7
         )
     except Exception as e:
         print(f"\nОшибка: {str(e)}")

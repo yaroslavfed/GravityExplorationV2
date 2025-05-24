@@ -67,7 +67,7 @@ public class InvertTaskService : IInvertTaskService
         //MeshNoiseAdder.AddGaussianNoise(trueTestMesh, 50);
 
         await _adaptiveInversionService.AdaptiveInvertAsync(
-            trueTestMesh,
+            initialMesh,
             sensors,
             sensorsGrid,
             inversionOptions,
