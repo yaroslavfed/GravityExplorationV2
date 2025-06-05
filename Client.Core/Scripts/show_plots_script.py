@@ -326,7 +326,7 @@ if __name__ == "__main__":
         description='Визуализатор ячеек сетки',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument('-f', '--file', default='mesh_data.json', help='Путь к JSON файлу')
+    parser.add_argument('-f', '--file', default='exit_mesh_model.json', help='Путь к JSON файлу')
     parser.add_argument('-x', '--x-slice', type=float)
     parser.add_argument('-y', '--y-slice', type=float)
     parser.add_argument('-z', '--z-slice', type=float)
@@ -340,7 +340,7 @@ if __name__ == "__main__":
             sensors=sensors,
             x_slice=0,
             y_slice=0,
-            z_slice=-7
+            z_slice=-0.5
         )
     except Exception as e:
         print(f"\nОшибка: {str(e)}")

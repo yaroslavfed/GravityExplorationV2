@@ -6,7 +6,7 @@ public record Sensor
 
     public double Y { get; init; }
 
-    public double Z { get; init; }
+    public double Z { get; init; } = 0;
 
     public double Value { get; set; }
 }

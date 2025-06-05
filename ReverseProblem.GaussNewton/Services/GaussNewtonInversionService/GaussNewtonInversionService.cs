@@ -1,6 +1,8 @@
 ﻿using Common.Models;
 using MathNet.Numerics.LinearAlgebra;
 
+// ReSharper disable InconsistentNaming
+
 namespace ReverseProblem.GaussNewton.Services.GaussNewtonInversionService;
 
 public class GaussNewtonInversionService : IGaussNewtonInversionService
@@ -10,61 +12,69 @@ public class GaussNewtonInversionService : IGaussNewtonInversionService
         double[] modelValues,
         double[] observedValues,
         double[,] jacobianRaw,
-        double[] initialParameters,
+        double[] parameters,
         InverseOptions options,
         int iterationNumber,
-        out double effectiveLambda
+        bool iterationStagnation
     )
     {
-        int m = observedValues.Length;
-        int n = initialParameters.Length;
+        var n = parameters.Length;
 
-        // 1. Вычисляем вектор невязки r = g_obs - g_calc
+        // Вычисляем вектор невязки r = g_obs - g_calc
         var residual = Vector<double>.Build.DenseOfEnumerable(
             observedValues.Zip(modelValues, (obs, calc) => obs - calc)
         );
 
-        // 1. Преобразуем матрицу Якобиана в Math.NET
+        // Преобразуем матрицу Якобиана в Math.NET
         var J = Matrix<double>.Build.DenseOfArray(jacobianRaw);
 
-        // 2. Вычисляем A = J^T * J и b = J^T * r
+        // Вычисляем A = J^T * J и b = J^T * r
         var JT = J.Transpose();
         var JTJ = JT * J;
         var JTr = JT * residual;
 
-        // 3. Вычисляем лямбду с учётом динамического затухания
-        double baseLambda = options.Lambda;
-        effectiveLambda = baseLambda;
-
+        // Динамическая регуляризация
+        var baseLambda = options.Lambda;
+        double effectiveLambda;
         if (options.AutoAdjustRegularization)
         {
-            effectiveLambda = baseLambda * Math.Pow(options.LambdaDecay, iterationNumber);
-            effectiveLambda = Math.Max(effectiveLambda, options.MinLambda);
+            effectiveLambda = iterationStagnation
+                ? Math.Min(baseLambda / Math.Pow(options.LambdaDecay, iterationNumber), options.MaxLambda)
+                : Math.Max(baseLambda * Math.Pow(options.LambdaDecay, iterationNumber), options.MinLambda);
         }
+        else
+            effectiveLambda = baseLambda;
 
-        // 4. Добавляем амплитудную регуляризацию (первого порядка)
+        // Регуляризация Тихонова 1-го порядка
         if (options.UseTikhonovFirstOrder)
         {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"Using Tikhonov first order: alfa = {effectiveLambda}");
             for (int i = 0; i < n; i++)
                 JTJ[i, i] += effectiveLambda;
+            Console.ResetColor();
         }
 
-        // 5. Добавляем сглаживающую регуляризацию (второго порядка)
+        // Регуляризация Тихонова 2-го порядка
         if (options.UseTikhonovSecondOrder)
         {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            double gamma = effectiveLambda * options.SecondOrderRegularizationLambdaMultiplier;
+            Console.WriteLine($"Using Tikhonov second order: gamma = {gamma}");
             AddTikhonovSecondOrderRegularization(
                 JTJ,
-                initialParameters,
+                parameters,
                 options.GradientThreshold,
                 effectiveLambda * options.SecondOrderRegularizationLambdaMultiplier
             );
+            Console.ResetColor();
         }
 
-        // 6. Решаем систему нормальных уравнений
+        // Решаем систему нормальных уравнений
         var delta = JTJ.Solve(JTr);
 
-        // 7. Обновляем параметры модели
-        return initialParameters.Zip(delta, (p, d) => p + d).ToArray();
+        // Обновляем параметры модели
+        return parameters.Zip(delta, (p, d) => p + d).ToArray();
     }
 
     /// <summary>

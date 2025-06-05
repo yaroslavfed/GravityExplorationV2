@@ -18,10 +18,10 @@ public interface IGaussNewtonInversionService
     double[] Invert(
         double[] modelValues,
         double[] observedValues,
-        double[,] jacobian,
-        double[] initialParameters,
+        double[,] jacobianRaw,
+        double[] parameters,
         InverseOptions options,
         int iterationNumber,
-        out double effectiveLambda
+        bool iterationStagnation
     );
 }

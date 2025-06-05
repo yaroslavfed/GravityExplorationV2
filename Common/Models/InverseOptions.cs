@@ -9,13 +9,21 @@ namespace Common.Models;
 public record InverseOptions
 {
     /// <summary>
+    /// Включаем ограничение по времени
+    /// </summary>
+    public bool EnableTimer { get; set; }
+
+    /// <summary>
+    /// Включаем ограничение по функционалу
+    /// </summary>
+    public bool EnableApproximation { get; set; }
+
+    public bool EnableRefining { get; set; }
+
+    /// <summary>
     /// Лимит функционала, если отношение между текущим функционалом на итерации меньше во сколько раз, чем первоначальный функционал - инверсия завершается
     /// </summary>
     public double FunctionalThreshold { get; set; }
-    /// <summary>
-    /// Использование лимита по времени
-    /// </summary>
-    public bool UseTimeThreshold { get; set; }
 
     /// <summary>
     /// Порог выполнения задачи, если задача решается дольше этого значения - инверсия завершается
@@ -32,6 +40,12 @@ public record InverseOptions
     /// Используется для ограничения автоматического уменьшения λ.
     /// </summary>
     public double MinLambda { get; set; }
+
+    /// <summary>
+    /// Максимально допустимое значение регуляризации.
+    /// Используется для ограничения автоматического увеличения λ.
+    /// </summary>
+    public double MaxLambda { get; set; }
 
     /// <summary>
     /// Коэффициент уменьшения λ на каждой итерации.
@@ -107,7 +121,7 @@ public record InverseOptions
     /// </summary>
     [JsonIgnore]
     public int? SmoothingStartIteration { get; set; }
-    
+
     /// <summary>
     /// Допустимый рост функционала прежде чем считать это отклонением.
     /// </summary>

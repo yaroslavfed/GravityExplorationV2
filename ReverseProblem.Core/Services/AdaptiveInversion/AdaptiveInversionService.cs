@@ -37,8 +37,11 @@ public class AdaptiveInversionService(
         var observedValues = sensors.Select(s => s.Value).ToArray();
         var currentMesh = initialMesh;
 
-        double currentFunctional = .0;
-        double previousFunctional = double.MaxValue;
+        await WriteModelToFile(currentMesh, "enter_mesh_model");
+
+        var residuals = new double[sensors.Count];
+        var currentFunctional = .0;
+        var previousFunctional = double.MaxValue;
 
         for (var iteration = 0; iteration < inversionOptions.MaxIterations; iteration++)
         {
@@ -48,21 +51,20 @@ public class AdaptiveInversionService(
             var anomalySensors = directTaskService.GetAnomalyMapFast(currentMesh, sensors, baseDensity);
             var modelValues = anomalySensors.Select(s => s.Value).ToArray();
 
-            // Расчёт невязки и вычисление функционала
-            currentFunctional = .0;
-            for (var i = 0; i < modelValues.Length; i++)
-            {
-                var residual = observedValues[i] - modelValues[i];
-                var weight = 1; // TODO: заменить на применения весов
+            // Вычисляем невязку
+            for (int i = 0; i < sensors.Count; i++)
+                residuals[i] = observedValues[i] - modelValues[i];
 
-                currentFunctional += residual * residual * weight * weight;
-            }
+            // Вычисляем функционал
+            currentFunctional = residuals.Select(r => r * r).Sum();
 
             // Сохранение начального функционала
             if (iteration == 0)
             {
                 _initialFunctional = currentFunctional;
                 Console.WriteLine($"Initial functional was set to: {_initialFunctional:E8}");
+
+                _functionalList.TryAdd(-1, _initialFunctional);
             }
 
             // Проверка на нулевой функционал
@@ -74,45 +76,51 @@ public class AdaptiveInversionService(
 
             // Проверка на достижение искомого функционала
             var functionalDiv = currentFunctional / _initialFunctional;
-            if (!inversionOptions.UseTimeThreshold && functionalDiv <= inversionOptions.FunctionalThreshold)
+            if (inversionOptions.EnableApproximation && functionalDiv <= inversionOptions.FunctionalThreshold)
             {
                 Console.WriteLine("The desired value of the functional has been achieved");
                 break;
             }
 
-            // Лог по итерации
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
-            Console.WriteLine(
-                $"Current functional: {currentFunctional:E8}\t|\tInitial functional: {_initialFunctional:E8}\n"
-                + $"(Current functional) / (Initial functional): {functionalDiv}\t|\tFunctional threshold: {inversionOptions.FunctionalThreshold}"
-            );
-            Console.ResetColor();
-
-            // Проверка на стагнацию функционала
-            if (iteration != 0)
-            {
-                var difference = previousFunctional - currentFunctional;
-                if (difference < 0)
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.WriteLine($"Difference between previous functional and current functional: {difference:E8}");
-                Console.ResetColor();
-
-                if (Math.Abs(difference) < inversionOptions.RelativeTolerance)
-                {
-                    Console.WriteLine("Small relative change in functional");
-                }
-            }
-
             // Проверка на выход по времени
-            if (inversionOptions.UseTimeThreshold && _timer.Elapsed.TotalMinutes >= inversionOptions.TimeThreshold)
+            if (inversionOptions.EnableTimer && _timer.Elapsed.TotalMinutes >= inversionOptions.TimeThreshold)
             {
                 Console.WriteLine("The time is out");
                 break;
             }
 
+            // Проверка на стагнацию функционала
+            var iterationStagnation = false;
+            if (iteration != 0)
+            {
+                var difference = previousFunctional - currentFunctional;
+                Console.ForegroundColor = difference < 0
+                    ? ConsoleColor.DarkRed
+                    : ConsoleColor.DarkBlue;
+                Console.WriteLine($"Difference between previous functional and current functional: {difference:E8}");
+                Console.ResetColor();
+
+                // inversionOptions.UseTikhonovSecondOrder = true;
+                if (difference < inversionOptions.RelativeTolerance)
+                {
+                    Console.WriteLine("Small relative change in functional");
+                    iterationStagnation = true;
+                    // inversionOptions.UseTikhonovSecondOrder = false;
+                }
+            }
+
+            // Лог по итерации
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine(
+                $"Current functional: {currentFunctional:E8}\t|\tInitial functional: {_initialFunctional:E8}\n\r"
+                + $"(Current functional) / (Initial functional): {functionalDiv}\t|\tFunctional threshold: {inversionOptions.FunctionalThreshold}\n\r"
+                + $"Tikhonov first is enable: {inversionOptions.UseTikhonovFirstOrder}\tTikhonov second is enable: {inversionOptions.UseTikhonovSecondOrder}"
+            );
+            Console.ResetColor();
+
             previousFunctional = currentFunctional;
 
-            // 8. Построение A
+            // Построение A
             Console.WriteLine("Calculating jacobian was started");
             var timer = Stopwatch.StartNew();
 
@@ -121,10 +129,10 @@ public class AdaptiveInversionService(
             timer.Stop();
             Console.WriteLine($"Calculating jacobian was finished in time: {timer.Elapsed.TotalMinutes} minutes");
 
-            // 9. Текущие параметры модели
+            // Текущие параметры модели
             var modelParameters = currentMesh.Cells.Select(c => c.Density).ToArray();
 
-            // 10. Итерация метода Гаусса–Ньютона
+            // Итерация метода Гаусса–Ньютона
             var updatedParameters = gaussNewtonInversionService.Invert(
                 modelValues,
                 observedValues,
@@ -132,15 +140,41 @@ public class AdaptiveInversionService(
                 modelParameters,
                 inversionOptions,
                 iteration,
-                out var effectiveLambda
+                iterationStagnation
             );
 
-            // 11. Обновляем плотности ячеек
+            // Обновляем плотности ячеек
             for (int j = 0; j < currentMesh.Cells.Count; j++)
                 currentMesh.Cells[j].Density = updatedParameters[j];
 
+            foreach (var cell in currentMesh.Cells)
+            {
+                if (double.IsNaN(cell.Density) || double.IsInfinity(cell.Density) || cell.Density <= 0)
+                    throw new($"Invalid mu detected: {cell.Density}");
+            }
+
             _functionalList.TryAdd(iteration, currentFunctional);
-            Console.WriteLine($"Elements: {currentMesh.Cells.Count}");
+
+            Console.WriteLine($"Elements before adaptation: {currentMesh.Cells.Count}");
+
+            // Уточняем сетку
+            if (inversionOptions.EnableRefining && iteration is not 0 && iteration % 100 is 0)
+            {
+                var refinedCells = meshRefinerService.RefineOrMergeCellsAdvanced(
+                    currentMesh,
+                    sensors,
+                    residuals,
+                    refinementOptions.RefineThreshold,
+                    refinementOptions.MergeThreshold,
+                    residuals.Max(Math.Abs),
+                    refinementOptions,
+                    sensorsGrid
+                );
+
+                currentMesh = new() { Cells = new List<Cell>(refinedCells) };
+            }
+
+            Console.WriteLine($"Elements after adaptation: {currentMesh.Cells.Count}");
         }
 
         _timer.Stop();
@@ -150,15 +184,42 @@ public class AdaptiveInversionService(
         Console.WriteLine($"Initial functional: {_initialFunctional:E8}\t|\tLast functional: {currentFunctional:E8}");
         Console.ResetColor();
 
-        await ShowPlotAsync(currentMesh, sensors);
+        await WriteFunctionalToFile(currentFunctional);
+        await WriteModelToFile(currentMesh, "exit_mesh_model");
+
+        await ShowPlotAsync(currentMesh);
         Console.WriteLine("The plot of result has been completed");
     }
 
-    private async Task ShowPlotAsync(Mesh mesh, IReadOnlyList<Sensor> sensors)
+    private async Task WriteFunctionalToFile(double lastFunctional)
     {
-        const string jsonFile = "mesh_data.json";
+        await using var writer = new StreamWriter($"GaussNewton_test_3_{DateTime.Now.ToShortDateString()}.txt", false);
+
+        await writer.WriteLineAsync($"Elapsed time: {_timer.Elapsed}");
+        await writer.WriteLineAsync(
+            $"Initial functional: {_initialFunctional:E8}\t|\tLast functional: {lastFunctional:E8}"
+        );
+
+        await writer.WriteLineAsync("\nFunctional list:");
+        foreach (var functional in _functionalList)
+            await writer.WriteLineAsync($"{functional.Key}: {functional.Value:E8}");
+    }
+
+    private async Task WriteModelToFile(Mesh mesh, string filename)
+    {
+        var json = JsonSerializer.Serialize(mesh, new JsonSerializerOptions { WriteIndented = true });
+
+        var filePath = $"{filename}.json";
+        await File.WriteAllTextAsync(filePath, json);
+
+        Console.WriteLine($"Модель сохранена в {filePath}");
+    }
+
+    private async Task ShowPlotAsync(Mesh mesh)
+    {
+        const string jsonFile = "exit_mesh_model.json";
         const string pythonPath = "python";
-        const string outputImage = "mesh_data.png";
+        const string outputImage = "exit_mesh_data.png";
 
         await File.WriteAllTextAsync(jsonFile, JsonSerializer.Serialize(mesh));
         var currentDirectory = Directory.GetCurrentDirectory();

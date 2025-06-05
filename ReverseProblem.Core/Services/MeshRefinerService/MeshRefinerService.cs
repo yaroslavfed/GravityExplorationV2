@@ -17,53 +17,79 @@ public class MeshRefinerService : IMeshRefinerService
         SensorsGrid sensorGrid
     )
     {
-        var refinedCells = new List<Cell>();
-
-        // Индексация сенсоров
+        var newCells = new List<Cell>();
         var sensorPositions = sensors.Select(s => new Vector3((float)s.X, (float)s.Y, (float)s.Z)).ToArray();
 
-        int refinedCount = 0;
-        int mergedCount = 0;
-        int keptCount = 0;
+        maxResidual = residuals.Max();
+        double absRefine = refinementOptions.RefineThreshold * maxResidual;
+        double absMerge = refinementOptions.MergeThreshold * maxResidual;
+
+        int refinedCount = 0, mergedCount = 0, keptCount = 0;
+
+        // Сначала разбиение и пометка ячеек для слияния
+        var cellsToKeep = new List<Cell>();
+        var cellsToMergeCandidates = new List<Cell>();
 
         foreach (var cell in mesh.Cells)
         {
-            // 1. Вычисляем локальную невязку вокруг ячейки
             double localResidual = CalculateLocalResidual(cell, sensorPositions, residuals);
 
-            // 2. Условия дробления
-            bool canRefine = localResidual > thresholdRefine
-                             && localResidual > 0.2 * maxResidual
-                             && cell.BoundX
-                             > refinementOptions.MinCellSizeFraction * (sensorGrid.EndX - sensorGrid.StartX)
-                             && cell.SubdivisionLevel < refinementOptions.MaxSubdivisionLevel;
-
-            bool canMerge = localResidual < thresholdMerge
-                            && cell.BoundX * 2
-                            <= refinementOptions.MaxCellSizeFraction * (sensorGrid.EndX - sensorGrid.StartX);
-
+            bool canRefine = localResidual > absRefine && cell.SubdivisionLevel < refinementOptions.MaxSubdivisionLevel;
             if (canRefine)
             {
-                Console.WriteLine(
-                    $"→ Refining cell at ({cell.CenterX}, {cell.CenterY}, {cell.CenterZ}) | Residual: {localResidual:E5}"
-                );
-                refinedCells.AddRange(SplitCell(cell));
+                // Разбиваем ячейку
+                newCells.AddRange(SplitCell(cell));
                 refinedCount++;
             }
-            else if (canMerge && CanMergeWithNeighbors(cell, sensorPositions, residuals, thresholdMerge))
+            else
             {
-                refinedCells.Add(MergeCell(cell));
+                // Кандидаты на слияние или сохранение
+                if (localResidual < absMerge
+                    && cell.BoundX * 2 <= refinementOptions.MaxCellSizeFraction * (sensorGrid.EndX - sensorGrid.StartX))
+                {
+                    cellsToMergeCandidates.Add(cell);
+                }
+                else
+                {
+                    cellsToKeep.Add(cell);
+                }
+            }
+        }
+
+        // Найдем группы соседних ячеек-кандидатов для слияния
+        var neighborGroups = FindNeighborGroups(cellsToMergeCandidates);
+
+        foreach (var group in neighborGroups)
+        {
+            // Проверяем для всей группы, можно ли её слить по остаткам
+            bool canMergeGroup = group.All(c => CanMergeWithNeighbors(c, sensorPositions, residuals, absMerge));
+
+            if (canMergeGroup && group.Count > 1)
+            {
+                // Объединяем группу ячеек
+                var mergedCell = MergeCells(group);
+                newCells.Add(mergedCell);
                 mergedCount++;
             }
             else
             {
-                refinedCells.Add(cell);
-                keptCount++;
+                // Добавляем ячейки, которые нельзя объединить, как есть
+                newCells.AddRange(group);
+                keptCount += group.Count;
             }
         }
 
-        Console.WriteLine($"→ Refined: {refinedCount}, Merged: {mergedCount}, Kept: {keptCount}");
-        return refinedCells;
+        // Добавляем ячейки, которые не попали ни в слияние, ни в разбиение
+        newCells.AddRange(cellsToKeep);
+        keptCount += cellsToKeep.Count;
+
+        Console.ForegroundColor = ConsoleColor.Magenta;
+        Console.WriteLine(
+            $"→ Refined: {refinedCount}, Merged: {mergedCount}, Kept: {keptCount}, Total: {newCells.Count}"
+        );
+        Console.ResetColor();
+
+        return newCells;
     }
 
     private static double CalculateLocalResidual(Cell cell, Vector3[] sensorPositions, double[] residuals)
@@ -76,7 +102,7 @@ public class MeshRefinerService : IMeshRefinerService
         for (int i = 0; i < sensorPositions.Length; i++)
         {
             double distance = Vector3.Distance(center, sensorPositions[i]);
-            double weight = 1.0 / (distance + epsilon); // вес по расстоянию
+            double weight = 1.0 / (distance + epsilon);
             sum += weight * Math.Abs(residuals[i]);
             totalWeight += weight;
         }
@@ -86,44 +112,50 @@ public class MeshRefinerService : IMeshRefinerService
             : 0;
     }
 
-    private static List<Cell> SplitCell(Cell cell)
+    private List<Cell> SplitCell(Cell cell)
     {
         var children = new List<Cell>();
-        double hx = cell.BoundX / 2;
-        double hy = cell.BoundY / 2;
-        double hz = cell.BoundZ / 2;
+        var newSizeX = cell.BoundX / 2.0;
+        var newSizeY = cell.BoundY / 2.0;
+        var newSizeZ = cell.BoundZ / 2.0;
+        var level = cell.SubdivisionLevel + 1;
 
-        for (int dx = -1; dx <= 1; dx += 2)
-            for (int dy = -1; dy <= 1; dy += 2)
-                for (int dz = -1; dz <= 1; dz += 2)
+        for (int ix = 0; ix < 2; ix++)
+            for (int iy = 0; iy < 2; iy++)
+                for (int iz = 0; iz < 2; iz++)
                 {
-                    children.Add(
-                        new()
-                        {
-                            CenterX = cell.CenterX + dx * hx / 2,
-                            CenterY = cell.CenterY + dy * hy / 2,
-                            CenterZ = cell.CenterZ + dz * hz / 2,
-                            BoundX = hx,
-                            BoundY = hy,
-                            BoundZ = hz,
-                            Density = cell.Density,
-                            SubdivisionLevel = cell.SubdivisionLevel + 1
-                        }
-                    );
+                    var newCell = new Cell
+                    {
+                        BoundX = newSizeX,
+                        BoundY = newSizeY,
+                        BoundZ = newSizeZ,
+                        CenterX = cell.CenterX + (ix - 0.5) * newSizeX,
+                        CenterY = cell.CenterY + (iy - 0.5) * newSizeY,
+                        CenterZ = cell.CenterZ + (iz - 0.5) * newSizeZ,
+                        SubdivisionLevel = level,
+                        Density = cell.Density
+                    };
+                    children.Add(newCell);
                 }
 
         return children;
     }
 
-    private static Cell MergeCell(Cell cell)
+    private Cell MergeCells(List<Cell> children)
     {
-        return cell with
+        var mergedCell = new Cell
         {
-            BoundX = cell.BoundX * 2,
-            BoundY = cell.BoundY * 2,
-            BoundZ = cell.BoundZ * 2,
-            SubdivisionLevel = Math.Max(0, cell.SubdivisionLevel - 1)
+            CenterX = children.Average(c => c.CenterX),
+            CenterY = children.Average(c => c.CenterY),
+            CenterZ = children.Average(c => c.CenterZ),
+            BoundX = children[0].BoundX * 2,
+            BoundY = children[0].BoundY * 2,
+            BoundZ = children[0].BoundZ * 2,
+            SubdivisionLevel = children[0].SubdivisionLevel - 1,
+            Density = children[0].Density // Возможно, здесь нужна усреднённая плотность
         };
+
+        return mergedCell;
     }
 
     private static bool CanMergeWithNeighbors(
@@ -146,5 +178,99 @@ public class MeshRefinerService : IMeshRefinerService
         }
 
         return true;
+    }
+
+    private bool AreNeighbors(Cell a, Cell b)
+    {
+        bool OverlapX = IntervalsOverlapOrTouch(
+            a.CenterX - a.BoundX,
+            a.CenterX + a.BoundX,
+            b.CenterX - b.BoundX,
+            b.CenterX + b.BoundX
+        );
+        bool OverlapY = IntervalsOverlapOrTouch(
+            a.CenterY - a.BoundY,
+            a.CenterY + a.BoundY,
+            b.CenterY - b.BoundY,
+            b.CenterY + b.BoundY
+        );
+        bool OverlapZ = IntervalsOverlapOrTouch(
+            a.CenterZ - a.BoundZ,
+            a.CenterZ + a.BoundZ,
+            b.CenterZ - b.BoundZ,
+            b.CenterZ + b.BoundZ
+        );
+
+        int countOverlaps = (OverlapX
+                                ? 1
+                                : 0)
+                            + (OverlapY
+                                ? 1
+                                : 0)
+                            + (OverlapZ
+                                ? 1
+                                : 0);
+
+        // Считаем соседними, если пересечение хотя бы по 2 осям
+        return countOverlaps >= 2;
+    }
+
+    private bool IntervalsOverlapOrTouch(double min1, double max1, double min2, double max2)
+    {
+        return !(max1 < min2 || max2 < min1);
+    }
+
+    private List<List<Cell>> FindNeighborGroups(List<Cell> cells)
+    {
+        var groups = new List<List<Cell>>();
+        var visited = new HashSet<Cell>();
+
+        var neighbors = new Dictionary<Cell, List<Cell>>();
+        foreach (var cell in cells)
+        {
+            neighbors[cell] = new List<Cell>();
+        }
+
+        for (int i = 0; i < cells.Count; i++)
+        {
+            for (int j = i + 1; j < cells.Count; j++)
+            {
+                if (AreNeighbors(cells[i], cells[j]))
+                {
+                    neighbors[cells[i]].Add(cells[j]);
+                    neighbors[cells[j]].Add(cells[i]);
+                }
+            }
+        }
+
+        foreach (var cell in cells)
+        {
+            if (!visited.Contains(cell))
+            {
+                var group = new List<Cell>();
+                var queue = new Queue<Cell>();
+                queue.Enqueue(cell);
+                visited.Add(cell);
+
+                while (queue.Count > 0)
+                {
+                    var current = queue.Dequeue();
+                    group.Add(current);
+
+                    foreach (var n in neighbors[current])
+                    {
+                        if (!visited.Contains(n))
+                        {
+                            visited.Add(n);
+                            queue.Enqueue(n);
+                        }
+                    }
+                }
+
+                groups.Add(group);
+            }
+        }
+
+        return groups;
     }
 }
